@@ -42,6 +42,8 @@ def dynamics(M, M0):
     """Compute Mdot as a function of M."""
     Mdot = -1e26 * f(M) * np.power(M, -2)  # Carr's function
     Mdot[M < 0] = 0
+    # this is for the case when the blackhole lifespan does not last long enouugh to get to x
+    # replace once talking to alex
     if M >= M0:
         Mdot = 0
     return np.array([-Mdot])
@@ -61,6 +63,8 @@ class PBHMass(LeafSystem):
 
 
 def PBHDemo(explosion_x, M0, x):
+    displacement = x-explosion_x # in km
+    boundary_time = displacement / 220 #(km/s), boundary_time in seconds
     builder = DiagramBuilder()
     sys = builder.AddSystem(PBHMass(M0))
     logger = LogVectorOutput(sys.get_output_port(), builder)
@@ -77,10 +81,21 @@ def PBHDemo(explosion_x, M0, x):
     explosion_M = 1e9  # initial conditions
     context.SetContinuousState([explosion_M])
 
-    simulator.AdvanceTo(boundary_time=40)
+    simulator.AdvanceTo(boundary_time)
+
+    mass_value = context.get_continuous_state_vector().CopyToVector()[0]
+    print(f"Mass at x = {x} km: {mass_value} g")
 
     log = logger.FindLog(context)
     plt.plot(log.sample_times(), log.data().T)
+    plt.xlabel("Time (s)")
+    plt.ylabel("PBH Mass (g)")
+    plt.title("PBH Mass vs. Time")
+
+    # mark mass value at x
+    plt.plot(boundary_time, mass_value, 'ro')  # Red dot
+    plt.text(boundary_time, mass_value, f'({boundary_time:.2f}, {mass_value:.2e})', fontsize=12, ha='right')
+
     plt.show()
 
-PBHDemo(explosion_x=0, M0=1e10, x=10)
+PBHDemo(explosion_x=0, M0=1e13, x=2200)
