@@ -38,28 +38,31 @@ def f(M):
                    np.where(M_log < 14, 100, 1))
     return out
 
-def dynamics(M):
+def dynamics(M, M0):
     """Compute Mdot as a function of M."""
     Mdot = -1e26 * f(M) * np.power(M, -2)  # Carr's function
     Mdot[M < 0] = 0
-    return -Mdot
+    if M >= M0:
+        Mdot = 0
+    return np.array([-Mdot])
 
 class PBHMass(LeafSystem):
     """Boilerplate to define the simple Drake system."""
 
-    def __init__(self):
+    def __init__(self, M0):
         LeafSystem.__init__(self)
+        self.M0 = M0
         state_index = self.DeclareContinuousState(1)
         self.DeclareStateOutputPort("M", state_index)
 
     def DoCalcTimeDerivatives(self, context, derivatives):
         M = context.get_continuous_state_vector().CopyToVector()
-        derivatives.get_mutable_vector().SetFromVector(dynamics(M))
+        derivatives.get_mutable_vector().SetFromVector(dynamics(M, self.M0))
 
 
-def PBHDemo():
+def PBHDemo(explosion_x, M0, x):
     builder = DiagramBuilder()
-    sys = builder.AddSystem(PBHMass())
+    sys = builder.AddSystem(PBHMass(M0))
     logger = LogVectorOutput(sys.get_output_port(), builder)
     diagram = builder.Build()
 
@@ -71,12 +74,13 @@ def PBHDemo():
     # ResetIntegratorFromFlags(simulator, scheme="runge_kutta3", max_step_size=0.1)
     context = simulator.get_mutable_context()
 
-    M0 = 10e9  # initial conditions
-    context.SetContinuousState([M0])
+    explosion_M = 1e9  # initial conditions
+    context.SetContinuousState([explosion_M])
 
-    simulator.AdvanceTo(boundary_time=10)
+    simulator.AdvanceTo(boundary_time=40)
 
     log = logger.FindLog(context)
     plt.plot(log.sample_times(), log.data().T)
+    plt.show()
 
-PBHDemo()
+PBHDemo(explosion_x=0, M0=1e10, x=10)
