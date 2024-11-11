@@ -51,19 +51,19 @@ def MdotAnalytical(M, M0):
         Mdot = 0
     return -Mdot
 
+# this is not being used anymore since we are doing euler by hand
+# class PBHMass(LeafSystem):
+#     """Boilerplate to define the simple Drake system."""
 
-class PBHMass(LeafSystem):
-    """Boilerplate to define the simple Drake system."""
+#     def __init__(self, M0):
+#         LeafSystem.__init__(self)
+#         self.M0 = M0
+#         state_index = self.DeclareContinuousState(1)
+#         self.DeclareStateOutputPort("M", state_index)
 
-    def __init__(self, M0):
-        LeafSystem.__init__(self)
-        self.M0 = M0
-        state_index = self.DeclareContinuousState(1)
-        self.DeclareStateOutputPort("M", state_index)
-
-    def DoCalcTimeDerivatives(self, context, derivatives):
-        M = context.get_continuous_state_vector().CopyToVector()
-        derivatives.get_mutable_vector().SetFromVector(MdotAnalytical(M, self.M0))
+#     def DoCalcTimeDerivatives(self, context, derivatives):
+#         M = context.get_continuous_state_vector().CopyToVector()
+#         derivatives.get_mutable_vector().SetFromVector(MdotAnalytical(M, self.M0))
 
 
 def solve_Mdot(MdotAnalytical, boundary_time, M0, dt):
@@ -86,16 +86,15 @@ def solve_Mdot(MdotAnalytical, boundary_time, M0, dt):
         Mi=M1
         ti=t1
 
-    return M
+    return M, t
 
 
 def PBHDemo(explosion_x, M0, x, dt=0.1):
     displacement = x-explosion_x # in km
     boundary_time = displacement / 220 #(km/s), boundary_time in seconds
     
-    M = solve_Mdot(MdotAnalytical, boundary_time, M0, dt)
-    t = [i * dt for i in range(len(M))]  # Generate the corresponding time array
-    
+    M, t = solve_Mdot(MdotAnalytical, boundary_time, M0, dt)
+
     mass_value = M[-1]
     
     # Plot the results
@@ -111,4 +110,4 @@ def PBHDemo(explosion_x, M0, x, dt=0.1):
     plt.show()
 
 
-PBHDemo(explosion_x=0, M0=1e13, x=2200)
+PBHDemo(explosion_x=0, M0=1e23, x=2200)
