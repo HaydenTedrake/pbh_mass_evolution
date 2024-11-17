@@ -36,40 +36,47 @@ def f(M):
 
 
 def Mdot(M):
-    '''Compute the mass as a function of time'''
+    '''Compute the mass as a function of time
+    '''
     out = -5.34e25*constant_fM/M**2
     return out
 
 
 def solve_Mdot(M0, explosion_time, dt=10):
     """
-    Numerically solve the mass evolution equation backwards in time.
+    Numerically solve the mass evolution equation backwards in time using RK4.
 
     Args:
-        explosion_mass (float): The mass at the endpoint (e.g., 1e9 grams).
         M0 (float): Initial mass at t = 0 in grams.
-        boundary_time (float): Total integration time in seconds.
+        explosion_time (float): Total integration time in seconds.
         dt (float): Time step for integration.
 
     Returns:
         times (list): Time steps (negative, integrating backwards).
         masses (list): Mass values corresponding to each time step.
     """
-    # initialize variables
+    # Initialize variables
     t = 0
     M = M0
     times = [t]
     masses = [M]
 
-    # integrate
-    while t < explosion_time*1.25:
-        dM = Mdot(M) * dt
+    # Integrate using RK4
+    while t < explosion_time * 1.25:
+        k1 = Mdot(M)
+        k2 = Mdot(M + 0.5 * dt * k1)
+        k3 = Mdot(M + 0.5 * dt * k2)
+        k4 = Mdot(M + dt * k3)
+        
+        dM = (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
         M += dM
         t += dt
-        masses.append(max(M, 0))  # ensure mass does not go negative
+        
+        masses.append(max(M, 0))
         times.append(t)
     
     return times, masses
+
 
 
 def MassAnalytical(M0, t):
@@ -81,50 +88,6 @@ def MassAnalytical(M0, t):
         Mass = 0
     return Mass
 
-
-# def PBHDemoAnalytical(explosion_x, M0, x, dt=1000):
-#     displacement = x-explosion_x # in km
-#     boundary_time = displacement / 220 #(km/s), boundary_time in seconds
-#     explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * constant_fM)
-
-#     t = [i * dt for i in range(int(explosion_time/dt*1.25))]
-#     M = [MassAnalytical(M0=M0, t=ti) for ti in t]
-
-    
-#     # Plot the results
-#     plt.plot(t, M)
-#     plt.xlabel("Time (s)")
-#     plt.ylabel("PBH Mass (g)")
-#     plt.title("PBH Mass vs. Time")
-
-#     plt.show()
-
-
-# def PBHDemoNumerical(explosion_x, M0, x):
-#     """
-#     Demo for numerical solution of PBH mass evolution integrating backwards.
-
-#     Args:
-#         explosion_x (float): Location of PBH explosion in km.
-#         M0 (float): Initial PBH mass at t=0 in grams.
-#         x (float): Target location in km.
-#         dt (float): Time step for integration.
-
-#     Returns:
-#         mass_value (float): Mass value at the starting time (boundary_time).
-#     """
-#     explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * constant_fM)
-
-#     # solve the mass evolution numerically
-#     times, masses = solve_Mdot(M0=M0, explosion_time=explosion_time)
-    
-#     # Plot the results
-#     plt.plot(times, masses)
-#     plt.xlabel("Time (s)")
-#     plt.ylabel("PBH Mass (g)")
-#     plt.title("PBH Mass vs. Time")
-    
-#     plt.show()
 
 def PBHDemo(explosion_x, M0, x, dt=1000):
     # Calculate common parameters
