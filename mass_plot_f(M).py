@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from scipy.optimize import root_scalar
 
 # Physical Constants
 c = 2.997924580 * 10**8          # speed of light, m/s
@@ -16,8 +17,6 @@ pi = math.pi
 
 mu = 0
 sigma = 1
-
-constant_fM=1
 
 
 def f(M):
@@ -36,78 +35,113 @@ def f(M):
 
 
 def Mdot(M):
-    '''Compute the mass as a function of time'''
-    out = -5.34e25*constant_fM/M**2
+    '''Compute the mass as a function of time
+    '''
+    out = -5.34e25*f(M)/M**2
     return out
 
 
 def solve_Mdot(M0, explosion_time, dt=10):
     """
-    Numerically solve the mass evolution equation backwards in time.
+    Numerically solve the mass evolution equation backwards in time using RK4.
 
     Args:
-        explosion_mass (float): The mass at the endpoint (e.g., 1e9 grams).
         M0 (float): Initial mass at t = 0 in grams.
-        boundary_time (float): Total integration time in seconds.
+        explosion_time (float): Total integration time in seconds.
         dt (float): Time step for integration.
 
     Returns:
         times (list): Time steps (negative, integrating backwards).
         masses (list): Mass values corresponding to each time step.
     """
-    # initialize variables
+    # Initialize variables
     t = 0
     M = M0
     times = [t]
     masses = [M]
 
-    # integrate
-    while t < explosion_time*1.25:
-        dM = Mdot(M) * dt
+    # Integrate using RK4
+    while t < explosion_time * 1.25:
+        k1 = Mdot(M)
+        k2 = Mdot(M + 0.5 * dt * k1)
+        k3 = Mdot(M + 0.5 * dt * k2)
+        k4 = Mdot(M + dt * k3)
+        
+        dM = (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
         M += dM
         t += dt
-        masses.append(max(M, 0))  # ensure mass does not go negative
+        
+        masses.append(max(M, 0))
         times.append(t)
     
     return times, masses
 
+def find_explosion_time(M0, target_mass=1e9):
+    """
+    Find the time at which the PBH mass reaches the target mass.
 
-def MassAnalytical(M0, t):
-    """Compute Mass as a function of time."""
+    Args:
+        M0 (float): Initial mass at t = 0 in grams.
+        target_mass (float): Target mass in grams.
 
-    Mass_cubed = (-16.02e25 * constant_fM * t + np.power(M0, 3))
-    Mass = np.cbrt(Mass_cubed)
-    if Mass < 0: 
-        Mass = 0
-    return Mass
+    Returns:
+        explosion_time (float): Time at which the PBH mass reaches the target mass.
+    """
+    def mass_at_time(t):
+        '''Helper function to compute mass at time t
+        '''
+        dt = t/1000
+        current_mass = M0
+
+        for _ in range(1000):
+            k1 = Mdot(current_mass)
+            k2 = Mdot(current_mass + 0.5 * dt * k1)
+            k3 = Mdot(current_mass + 0.5 * dt * k2)
+            k4 = Mdot(current_mass + dt * k3)
+
+            current_mass += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+
+            if current_mass < target_mass:
+                return current_mass - target_mass
+        
+        return current_mass - target_mass
+    
+    rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
+
+    try:
+        result = root_scalar(
+            mass_at_time, 
+            bracket=[rough_estimate*0.1, rough_estimate*2], 
+            method='brentq'
+        )
+        return result.root
+    except ValueError:
+        print("Failed to find explosion time.")
+        return None
 
 
 def PBHDemo(explosion_x, M0, x, dt=1000):
     # Calculate common parameters
     displacement = x - explosion_x  # in km
     boundary_time = displacement / 220  # (km/s), boundary_time in seconds
-    explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * constant_fM)
-    
-    # Analytical solution
-    t_analytical = [i * dt for i in range(int(explosion_time/dt*1.25))]
-    M_analytical = [MassAnalytical(M0=M0, t=ti) for ti in t_analytical]
+    explosion_time = find_explosion_time(M0, target_mass=1e9)
+    # if explosion_time is not None:
+    #     print(f"Initial mass: {M0} g")
+    #     print(f"Explosion time: {explosion_time} s")
     
     # Numerical solution
     times_numerical, masses_numerical = solve_Mdot(M0=M0, explosion_time=explosion_time)
     
     # Create the combined plot
     plt.figure(figsize=(10, 6))
-    
-    # Plot analytical solution in blue
-    plt.plot(t_analytical, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
-    
+
     # Plot numerical solution in red
     plt.plot(times_numerical, masses_numerical, 'r--', label='Numerical Solution', alpha=0.8)
     
     # Customize the plot
     plt.xlabel("Time (s)")
     plt.ylabel("PBH Mass (g)")
-    plt.title("PBH Mass Evolution: Analytical vs Numerical Solution")
+    plt.title("PBH Mass Evolution")
     plt.legend()
     plt.grid(True, alpha=0.3)
     
