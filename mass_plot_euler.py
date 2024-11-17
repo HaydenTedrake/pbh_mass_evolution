@@ -1,12 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# from pydrake.all import (
-#     DiagramBuilder,
-#     LeafSystem,
-#     LogVectorOutput,
-#     ResetIntegratorFromFlags,
-#     Simulator,
-# )
 import math
 
 # Physical Constants
@@ -25,7 +18,7 @@ mu = 0
 sigma = 1
 
 
-constant_fM=10
+constant_fM=1
 
 
 def f(M):
@@ -45,11 +38,11 @@ def f(M):
 
 def Mdot(M):
     '''Compute the mass as a function of time'''
-    out = -1e26*f(M)/M**2
+    out = -5.34e25*f(M)/M**2
     return out
 
 
-def solve_Mdot(M0, boundary_time, explosion_mass=1e9, dt=0.1):
+def solve_Mdot(M0, boundary_time, dt=0.1):
     """
     Numerically solve the mass evolution equation backwards in time.
 
@@ -68,15 +61,15 @@ def solve_Mdot(M0, boundary_time, explosion_mass=1e9, dt=0.1):
 
     # initialize variables
     t = 0
-    M = explosion_mass
+    M = M0
     times = [t]
     masses = [M]
 
     # integrate backwards
     while t > -boundary_time:
-        dM = -(-1e26 * f(M) / M**2 + C) * dt
+        dM = -(-5.34e25 * f(M) / M**2) * dt
         M += dM
-        t -= dt
+        t += dt
         masses.append(max(M, 0))  # ensure mass does not go negative
         times.append(abs(t))
     
@@ -86,25 +79,21 @@ def solve_Mdot(M0, boundary_time, explosion_mass=1e9, dt=0.1):
 def MassAnalytical(M0, t):
     """Compute Mass as a function of time."""
 
-    Mass_cubed = (-3e26 * constant_fM * t + np.power(M0, 3))
-
+    Mass_cubed = (-16.02e25 * constant_fM * t + np.power(M0, 3))
     Mass = np.cbrt(Mass_cubed)
     if Mass < 0: 
         Mass = 0
     return Mass
 
 
-def PBHDemoAnalytical(explosion_x, M0, x, dt=0.1):
+def PBHDemoAnalytical(explosion_x, M0, x, dt=1000):
     displacement = x-explosion_x # in km
     boundary_time = displacement / 220 #(km/s), boundary_time in seconds
-    explosion_time = (np.power(M0, 3) - 1e27) / (3e26 * constant_fM)
+    explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * constant_fM)
 
-    mass_value = MassAnalytical(M0=M0, t=explosion_time-boundary_time)
-
-    increments = int(boundary_time / dt)
-
-    t = [explosion_time-boundary_time + i * dt for i in range(increments)]
+    t = [i * dt for i in range(int(explosion_time/dt*1.25))]
     M = [MassAnalytical(M0=M0, t=ti) for ti in t]
+
     
     # Plot the results
     plt.plot(t, M)
@@ -112,15 +101,10 @@ def PBHDemoAnalytical(explosion_x, M0, x, dt=0.1):
     plt.ylabel("PBH Mass (g)")
     plt.title("PBH Mass vs. Time")
 
-    # Mark the mass value at x
-    plt.plot(explosion_time-boundary_time, mass_value, 'ro')  # Red dot
-    plt.text(explosion_time-boundary_time, mass_value, f'({boundary_time:.2f}, {mass_value:.2e})', fontsize=12, ha='right')
-
     plt.show()
-    return mass_value
 
 
-def PBHDemoNumerical(explosion_x, M0, x, dt=0.1):
+def PBHDemoNumerical(explosion_x, M0, x):
     """
     Demo for numerical solution of PBH mass evolution integrating backwards.
 
@@ -136,11 +120,8 @@ def PBHDemoNumerical(explosion_x, M0, x, dt=0.1):
     displacement = x-explosion_x # in km
     boundary_time = displacement / 220 #(km/s), boundary_time in seconds
 
-    # Solve the mass evolution numerically
+    # solve the mass evolution numerically
     times, masses = solve_Mdot(M0=M0, boundary_time=boundary_time)
-    
-    # Mass at the starting point
-    mass_value = masses[0]
     
     # Plot the results
     plt.plot(times, masses)
@@ -148,16 +129,7 @@ def PBHDemoNumerical(explosion_x, M0, x, dt=0.1):
     plt.ylabel("PBH Mass (g)")
     plt.title("PBH Mass vs. Time")
     
-    # Mark the final mass
-    plt.plot(times[0], mass_value, 'ro')  # Red dot
-    plt.text(times[0], mass_value, f'({times[0]:.2f}, {mass_value:.2e})', fontsize=12, ha='right')
-    
     plt.show()
-    return mass_value
 
 
-mass_value = PBHDemoAnalytical(explosion_x=0, M0=1e20, x=1100)
-print(f"Final mass value: {mass_value:.2e}")
-
-mass_value = PBHDemoNumerical(explosion_x=0, M0=1e20, x=2200)
-print(f"Final mass value: {mass_value:.2e}")
+PBHDemoAnalytical(explosion_x=0, M0=1e11, x=2200)
