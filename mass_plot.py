@@ -14,28 +14,13 @@ e0 = np.float64(8.854187813e-12)       # electric constant, A s/m V
 Ryd = np.float64(13.60569312)          # Rydberg energy, eV
 mP = np.float64(1.672621924e-27)       # proton mass, kg
 
-constant_fM = np.float64(1)
-
 def f(M):
     """f(m) function"""    
-    try:
-        # Ensure M is numeric and positive
-        M = np.abs(M)
-        M_log = float(np.log10(M))  # Convert to Python float for consistent comparisons
-        
-        if M_log >= 14 and M_log <= 17:
-            return np.power(M, -2.0/3.0) * np.power(10.0, 34.0/3.0)
-        elif M_log < 14:
-            return np.float64(100.0)
-        else:  # M_log > 17
-            return np.float64(1.0)
-        
-    except Exception as e:
-        return {"error": str(e)}
+    return np.float64(1)
 
 def Mdot(M):
     """Mass evolution function"""
-    return -5.34e25 * constant_fM / (M * M)
+    return -5.34e25 * f(M) / (M * M)
 
 def find_explosion_time(M0, target_mass=1e9):
     """
@@ -106,7 +91,7 @@ def find_explosion_time(M0, target_mass=1e9):
         return None
 
 
-def solve_Mdot_improved(M0, scale, explosion_time, dt=None):
+def solve_Mdot(M0, explosion_time, dt=None):
     """
     Solve the mass evolution equation using scipy's solve_ivp with adaptive step size.
     
@@ -129,7 +114,7 @@ def solve_Mdot_improved(M0, scale, explosion_time, dt=None):
     # Use solve_ivp with adaptive step size
     solution = solve_ivp(
         dMdt,
-        t_span=(0, explosion_time * 1.25),
+        t_span=(0, explosion_time),
         y0=[M0],
         method='RK45',
         rtol=rtol,
@@ -139,7 +124,16 @@ def solve_Mdot_improved(M0, scale, explosion_time, dt=None):
     
     return solution.t, solution.y[0]
 
-def PBHDemo_improved(explosion_x, M0, x, dt=1000):
+def MassAnalytical(M0, t):
+    """Compute Mass as a function of time."""
+
+    Mass_cubed = (-16.02e25 * f(M0) * t + np.power(M0, 3))
+    Mass = np.cbrt(Mass_cubed)
+    if Mass < 0: 
+        Mass = 0
+    return Mass
+
+def PBHDemo(explosion_x, M0, x, dt=100):
     """
     Improved version of PBH demonstration with better numerical integration
     and plotting capabilities.
@@ -158,26 +152,33 @@ def PBHDemo_improved(explosion_x, M0, x, dt=1000):
     
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
-        explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * constant_fM)
+        explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * f(M0))
     
+    # Analytical solution
+    t_analytical = [i * dt for i in range(int(explosion_time/dt))]
+    M_analytical = [MassAnalytical(M0=M0, t=ti) for ti in t_analytical]
+
     # Solve using improved method
-    times_numerical, masses_numerical = solve_Mdot_improved(M0, scale_num, explosion_time=explosion_time, dt=dt)
+    times_numerical, masses_numerical = solve_Mdot(M0, explosion_time=explosion_time, dt=dt)
     
     # Create the plot with logarithmic scales
     plt.figure(figsize=(12, 8))
     
+    # Plot analytical solution in blue
+    plt.plot(t_analytical, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
+
     # Plot numerical solution
-    plt.semilogy(times_numerical, masses_numerical, 'r-', label='Numerical Solution', linewidth=2)
+    plt.semilogy(times_numerical, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
     
     # Customize the plot
     plt.xlabel("Time (s)")
     plt.ylabel("PBH Mass (g)")
-    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g)")
+    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g): Analytical vs Numerical Solution")
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
     
     # Add some key information as text
-    info_text = f"Explosion Time: {explosion_time:.2e} s"
+    info_text = f"Explosion Time: {explosion_time} s"
     plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
              verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
@@ -186,4 +187,4 @@ def PBHDemo_improved(explosion_x, M0, x, dt=1000):
     return times_numerical, masses_numerical
 
 # Example usage
-PBHDemo_improved(explosion_x=0, M0=1e11, x=1e6)
+PBHDemo(explosion_x=0, M0=1e11, x=1e6)
