@@ -13,6 +13,8 @@ python3 -m venv venv
 source venv/bin/activate  
 pip install -r requirements.txt  
 
+---
+
 ## Research Overview
 
 This project focuses on the mass evolution of **Primordial Black Holes (PBHs)** using Python. It determines the mass of a PBH at the location of its explosion based on its formation mass. The research uses **Carr's differential equation**, a key model for understanding PBH mass evolution over time in the absence of accretion:
