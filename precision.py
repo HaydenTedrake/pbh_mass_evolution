@@ -1,5 +1,4 @@
 import numpy as np
-from numba import jit
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
@@ -16,7 +15,6 @@ mP = np.float64(1.672621924e-27)       # proton mass, kg
 
 constant_fM = np.float64(1)
 
-@jit(nopython=True)
 def f(M):
     """Vectorized and JIT-compiled version of Carr's f(m) function"""
     M_log = np.log10(M)
@@ -27,7 +25,6 @@ def f(M):
     else:
         return 1
 
-@jit(nopython=True)
 def Mdot(M):
     """JIT-compiled version of mass evolution function"""
     return -5.34e25 * constant_fM / (M * M)
