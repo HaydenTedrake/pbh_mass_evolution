@@ -22,7 +22,7 @@ def Mdot(M):
     """Mass evolution function"""
     return -5.34e25 * f(M) / (M * M)
 
-def find_explosion_time(M0, target_mass=1e9):
+def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10):
     """
     Find the time at which the PBH mass reaches the target mass.
 
@@ -51,47 +51,31 @@ def find_explosion_time(M0, target_mass=1e9):
 
         return current_mass - target_mass
 
-    print(f"M0: {M0}, Target Mass: {target_mass}")
-    print(f"f(M0): {f(M0)}")
-
     # Rough estimate for the explosion time
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
-    lower_bound = rough_estimate * 0.1
+    lower_bound = rough_estimate * 0.5
     upper_bound = rough_estimate * 2
 
-    # Step 2: Expand the interval systematically if bracketing fails
-    max_attempts = 10
-    expansion_factor = 2  # How much to expand the bounds each step
+    for _ in range(max_iterations):
+        try:
+            result = root_scalar(
+                mass_at_time,
+                bracket=[lower_bound, upper_bound],
+                method='brentq',
+                xtol=precision
+            )
+            final_mass = mass_at_time(result.root)
+            
+            if abs(final_mass) < precision * target_mass:
+                return result.root
+        except ValueError:
+            lower_bound *= 0.5
+            upper_bound *= 2.0
 
-    for attempt in range(max_attempts):
-        lower_value = mass_at_time(lower_bound)
-        upper_value = mass_at_time(upper_bound)
-        print(f"Attempt {attempt}: Lower = {lower_value}, Upper = {upper_value}")
+    print("Warning: Precise explosion time calculation did not converge.")
+    return rough_estimate
 
-        if lower_value * upper_value < 0:
-            print("Root found within expanded interval.")
-            break  # Root is bracketed
-        else:
-            lower_bound /= expansion_factor
-            upper_bound *= expansion_factor
-    else:
-        print("Failed to bracket root after maximum attempts.")
-        return None  # Return None if bracketing fails
-
-    # Use root_scalar to find the explosion time
-    try:
-        result = root_scalar(
-            mass_at_time,
-            bracket=[lower_bound, upper_bound],
-            method='brentq'
-        )
-        return result.root
-    except ValueError as e:
-        print(f"Root finding failed: {e}")
-        return None
-
-
-def solve_Mdot(M0, explosion_time, dt=None):
+def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     """
     Solve the mass evolution equation using scipy's solve_ivp with adaptive step size.
     
@@ -105,7 +89,13 @@ def solve_Mdot(M0, explosion_time, dt=None):
         masses (ndarray): Mass values corresponding to each time step
     """
     def dMdt(t, M):
-        return Mdot(M)
+        return Mdot(M[0])
+    
+    def event_mass_threshold(t, M):
+        return M[0] - target_mass
+    
+    event_mass_threshold.terminal = True  # Stop integration when event occurs
+    event_mass_threshold.direction = -1   # Only trigger when crossing from above
 
     # Set up solver parameters
     rtol = 1e-6
@@ -119,7 +109,8 @@ def solve_Mdot(M0, explosion_time, dt=None):
         method='RK45',
         rtol=rtol,
         atol=atol,
-        max_step=dt if dt is not None else np.inf
+        max_step=dt if dt is not None else np.inf,
+        events=event_mass_threshold
     )
     
     return solution.t, solution.y[0]
@@ -133,7 +124,7 @@ def MassAnalytical(M0, t):
         Mass = 0
     return Mass
 
-def PBHDemo(explosion_x, M0, x, dt=100):
+def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     """
     Improved version of PBH demonstration with better numerical integration
     and plotting capabilities.
@@ -142,24 +133,28 @@ def PBHDemo(explosion_x, M0, x, dt=100):
         explosion_x (float): Explosion position in km
         M0 (float): Initial mass in grams
         x (float): Position in km
+        target_mass (float, optional): Target mass for explosion time calculation in grams
         dt (float, optional): Maximum time step for integration
     """
     # Calculate parameters
     displacement = x - explosion_x  # in km
     boundary_time = displacement / 220  # (km/s)
-    explosion_time = find_explosion_time(M0)  # Using the new function
-    scale_num = M0/2
+    explosion_time = find_explosion_time(M0, target_mass=target_mass)  # Using target_mass
     
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
-        explosion_time = (np.power(M0, 3) - 1e27) / (16.02e25 * f(M0))
+        explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(M0))
     
     # Analytical solution
-    t_analytical = [i * dt for i in range(int(explosion_time/dt))]
-    M_analytical = [MassAnalytical(M0=M0, t=ti) for ti in t_analytical]
-
+    t_analytical = np.arange(0, explosion_time, 10)
+    M_analytical = np.array([MassAnalytical(M0=M0, t=ti) for ti in t_analytical])
+    
+    mask_analytical = M_analytical >= target_mass
+    t_analytical = t_analytical[mask_analytical]
+    M_analytical = M_analytical[mask_analytical]
+    
     # Solve using improved method
-    times_numerical, masses_numerical = solve_Mdot(M0, explosion_time=explosion_time, dt=dt)
+    times_numerical, masses_numerical = solve_Mdot(M0, explosion_time, target_mass, dt=dt)
     
     # Create the plot with logarithmic scales
     plt.figure(figsize=(12, 8))
@@ -173,7 +168,7 @@ def PBHDemo(explosion_x, M0, x, dt=100):
     # Customize the plot
     plt.xlabel("Time (s)")
     plt.ylabel("PBH Mass (g)")
-    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g): Analytical vs Numerical Solution")
+    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g, Target Mass = {target_mass:.2e} g)")
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
     
@@ -186,5 +181,5 @@ def PBHDemo(explosion_x, M0, x, dt=100):
     
     return times_numerical, masses_numerical
 
-# Example usage
-PBHDemo(explosion_x=0, M0=1e11, x=1e6)
+# Example usage with custom target mass
+PBHDemo(explosion_x=0, M0=1e11, x=1e6, target_mass=1e9)
