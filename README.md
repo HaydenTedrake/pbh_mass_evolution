@@ -19,7 +19,7 @@ pip install -r requirements.txt
 
 This project focuses on the mass evolution of **Primordial Black Holes (PBHs)** using Python. It determines the mass of a PBH at the location of its explosion based on its formation mass. The research uses **Carr's differential equation**, a key model for understanding PBH mass evolution over time in the absence of accretion:
 
-This equation describes PBH mass loss as a function of time, where \( f(m) \) is the number of particle species that can be produced by a PBH of mass \( m \). An approximation for \( f(m) \), developed by my mentor Alexandra Klipfel, is currently used in this study.
+This equation describes PBH mass loss as a function of time, where f(m) is the number of particle species that can be produced by a PBH of mass m. An approximation for f(m), developed by my mentor Alexandra Klipfel, is currently used in this study.
 
 ---
 
@@ -33,7 +33,7 @@ This equation describes PBH mass loss as a function of time, where \( f(m) \) is
    - The results are validated using Carr’s equation.
 
 3. **Future Enhancements**  
-   - Improve the \( f(m) \) approximation for higher accuracy.  
+   - Improve the f(m) approximation for higher accuracy.  
    - Explore using the **lognormal PDF equation** from Boudad and Cirelli to estimate the PBH formation mass instead of treating it as an input.
 
 ---
@@ -43,7 +43,7 @@ This equation describes PBH mass loss as a function of time, where \( f(m) \) is
 ### Key Challenges  
 - Mastering advanced numerical integration techniques.  
 - Efficiently programming large-scale simulations.  
-- Refining the \( f(m) \) approximation.
+- Refining the f(m) approximation.
 
 ### Addressing Challenges  
 - Weekly mentor meetings with Alexandra Klipfel in **26-541, Building 26** every Monday at **1 PM**.  
