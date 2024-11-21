@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar
+from scipy.interpolate import interp1d
 
 # Physical Constants (using numpy for consistent array operations)
 c = np.float64(2.997924580e8)          # speed of light, m/s
@@ -157,22 +158,34 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     times_numerical, masses_numerical = solve_Mdot(M0, explosion_time, target_mass, dt=dt)
     
     # Shift times by explosion time
-    t_analytical_shifted = t_analytical - explosion_time
     times_numerical_shifted = times_numerical - explosion_time
+    
+    # Interpolate to find M(-boundary_time)
+    interpolation_function = interp1d(
+        times_numerical_shifted, 
+        masses_numerical, 
+        kind='linear', 
+        bounds_error=False, 
+        fill_value="extrapolate"
+    )
+    mass_at_negative_boundary_time = interpolation_function(-boundary_time)
     
     # Create the plot with logarithmic scales
     plt.figure(figsize=(12, 8))
     
     # Plot analytical solution in blue
-    plt.plot(t_analytical_shifted, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
+    plt.plot(t_analytical - explosion_time, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
 
     # Plot numerical solution
     plt.semilogy(times_numerical_shifted, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
     
+    # Highlight M(-boundary_time)
+    plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target x ≈ {mass_at_negative_boundary_time:.2e} g", zorder=5)
+    
     # Customize the plot
     plt.xlabel("Time relative to explosion time (s)")
     plt.ylabel("PBH Mass (g)")
-    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g, Target Mass = {target_mass:.2e} g)")
+    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g)")
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
     
@@ -183,7 +196,9 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     
     plt.show()
     
-    return times_numerical_shifted, masses_numerical
+    return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
 # Example usage with custom target mass
-PBHDemo(explosion_x=0, M0=1e11, x=1e6, target_mass=1e9)
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=2200, target_mass=1e9)
+
+print(f"M at target x = {M_at_negative_boundary:.2e} g")
