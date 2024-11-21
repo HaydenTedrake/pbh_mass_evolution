@@ -156,30 +156,34 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Solve using improved method
     times_numerical, masses_numerical = solve_Mdot(M0, explosion_time, target_mass, dt=dt)
     
+    # Shift times by explosion time
+    t_analytical_shifted = t_analytical - explosion_time
+    times_numerical_shifted = times_numerical - explosion_time
+    
     # Create the plot with logarithmic scales
     plt.figure(figsize=(12, 8))
     
     # Plot analytical solution in blue
-    plt.plot(t_analytical, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
+    plt.plot(t_analytical_shifted, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
 
     # Plot numerical solution
-    plt.semilogy(times_numerical, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
+    plt.semilogy(times_numerical_shifted, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
     
     # Customize the plot
-    plt.xlabel("Time (s)")
+    plt.xlabel("Time relative to explosion time (s)")
     plt.ylabel("PBH Mass (g)")
     plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g, Target Mass = {target_mass:.2e} g)")
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.legend()
     
     # Add some key information as text
-    info_text = f"Explosion Time: {explosion_time} s"
+    info_text = f"Explosion Time: {explosion_time:.2e} s"
     plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
              verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
     plt.show()
     
-    return times_numerical, masses_numerical
+    return times_numerical_shifted, masses_numerical
 
 # Example usage with custom target mass
 PBHDemo(explosion_x=0, M0=1e11, x=1e6, target_mass=1e9)
