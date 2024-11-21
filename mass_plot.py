@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numba import njit, float64
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar
 from scipy.interpolate import interp1d
@@ -15,12 +16,12 @@ e0 = np.float64(8.854187813e-12)       # electric constant, A s/m V
 Ryd = np.float64(13.60569312)          # Rydberg energy, eV
 mP = np.float64(1.672621924e-27)       # proton mass, kg
 
+@njit(float64(float64))
 def f(M):
-    """f(m) function"""    
-    return np.float64(1)
+    return 1.0
 
+@njit(float64(float64))
 def Mdot(M):
-    """Mass evolution function"""
     return -5.34e25 * f(M) / (M * M)
 
 def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10):
@@ -34,6 +35,7 @@ def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10
     Returns:
         explosion_time (float): Time at which the PBH mass reaches the target mass.
     """
+    @njit
     def mass_at_time(t):
         """Helper function to compute mass at time t"""
         dt = t / 1000
