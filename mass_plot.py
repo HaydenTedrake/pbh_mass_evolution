@@ -1,27 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import njit, float64
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar
 from scipy.interpolate import interp1d
 
-# Physical Constants (using numpy for consistent array operations)
-c = np.float64(2.997924580e8)          # speed of light, m/s
-mE = np.float64(9.109383702e-31)       # electron mass, kg
-NA = np.float64(6.022140760e23)        # Avogadro's number, 1/mole
-e = np.float64(1.602176634e-19)        # electron charge, C
-hbar = np.float64(1.054571818e-34)     # reduced Planck constant, J s
-alpha = np.float64(7.297352569e-3)     # fine structure constant
-e0 = np.float64(8.854187813e-12)       # electric constant, A s/m V
-Ryd = np.float64(13.60569312)          # Rydberg energy, eV
-mP = np.float64(1.672621924e-27)       # proton mass, kg
-
-@njit(float64(float64))
 def f(M):
     return 1.0
 
-@njit(float64(float64))
 def Mdot(M):
+    if M <= 0:
+        raise ValueError("Mass must be positive.")
     return -5.34e25 * f(M) / (M * M)
 
 def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10):
@@ -35,39 +23,58 @@ def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10
     Returns:
         explosion_time (float): Time at which the PBH mass reaches the target mass.
     """
-    @njit
     def mass_at_time(t):
-        """Helper function to compute mass at time t"""
-        dt = t / 1000
-        current_mass = M0
+        def dMdt(t, M):
+            return Mdot(M)
 
-        for _ in range(1000):
-            k1 = Mdot(current_mass)
-            k2 = Mdot(current_mass + 0.5 * dt * k1)
-            k3 = Mdot(current_mass + 0.5 * dt * k2)
-            k4 = Mdot(current_mass + dt * k3)
+        # Solve ODE with event for reaching target mass
+        def event_reach_target(t, M):
+            # Ensure M is scalar
+            return M[0] - target_mass  # Access the first element of the array
 
-            current_mass += (dt / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+        event_reach_target.terminal = True
+        event_reach_target.direction = -1
 
-            if current_mass < target_mass:
-                return current_mass - target_mass
+        solution = solve_ivp(
+            dMdt,
+            [0, t],
+            [M0],
+            method='RK45',
+            events=event_reach_target
+        )
 
-        return current_mass - target_mass
+        if not solution.success or len(solution.y) == 0:
+            print("Integration failed.")
+            return float('inf')  # Large value to indicate failure
+
+        # Check if event was triggered
+        if solution.t_events[0].size > 0:
+            return solution.y_events[0][0] - target_mass
+
+        final_mass = solution.y[0][-1]
+        return final_mass - target_mass
+
 
     # Rough estimate for the explosion time
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
-    lower_bound = rough_estimate * 0.5
-    upper_bound = rough_estimate * 2
+    print(f"Rough estimate: {rough_estimate}")
+    lower_bound = max(rough_estimate * 0.1, 1e-10)  # Ensure non-zero lower bound
+    print(f"Lower bound: {lower_bound}")
+    upper_bound = rough_estimate * 10
+    print(f"Upper bound: {upper_bound}")
 
     for _ in range(max_iterations):
         try:
+            print(f"Trying bounds: {lower_bound}, {upper_bound}")
             result = root_scalar(
                 mass_at_time,
                 bracket=[lower_bound, upper_bound],
                 method='brentq',
                 xtol=precision
             )
+            print(f"Result: {result}")
             final_mass = mass_at_time(result.root)
+            print(f"Final mass: {final_mass}")
             
             if abs(final_mass) < precision * target_mass:
                 return result.root
@@ -118,10 +125,12 @@ def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     
     return solution.t, solution.y[0]
 
+
+
 def MassAnalytical(M0, t):
     """Compute Mass as a function of time."""
 
-    Mass_cubed = (-16.02e25 * f(M0) * t + np.power(M0, 3))
+    Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
     Mass = np.cbrt(Mass_cubed)
     if Mass < 0: 
         Mass = 0
@@ -139,6 +148,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         target_mass (float, optional): Target mass for explosion time calculation in grams
         dt (float, optional): Maximum time step for integration
     """
+    M0 = M0
     # Calculate parameters
     displacement = x - explosion_x  # in km
     boundary_time = displacement / 220  # (km/s)
@@ -146,7 +156,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
-        explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(M0))
+        explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(1))
     
     # Analytical solution
     t_analytical = np.arange(0, explosion_time, 10)
@@ -202,5 +212,3 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
 
 # Example usage with custom target mass
 times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=2200, target_mass=1e9)
-
-print(f"M at target x = {M_at_negative_boundary:.2e} g")
