@@ -27,31 +27,35 @@ def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10
         def dMdt(t, M):
             return Mdot(M)
 
-        # Solve ODE with event for reaching target mass
+        # Event to stop integration when reaching the target mass
         def event_reach_target(t, M):
-            # Ensure M is scalar
-            return M[0] - target_mass  # Access the first element of the array
+            return M[0] - target_mass
 
         event_reach_target.terminal = True
         event_reach_target.direction = -1
 
+        # Solve the ODE
         solution = solve_ivp(
             dMdt,
-            [0, t],
+            [0, 1e15],  # Extend time span to very large values
             [M0],
             method='RK45',
-            events=event_reach_target
+            events=event_reach_target,
+            max_step=1e7  # Allow large steps
         )
 
-        if not solution.success or len(solution.y) == 0:
-            print("Integration failed.")
-            return float('inf')  # Large value to indicate failure
 
-        # Check if event was triggered
+        # Debugging: Check solver output
+        print(f"Solver status for t={t}: Success={solution.success}, Events={solution.t_events}")
+
+        # Check if the solver stopped due to the event
         if solution.t_events[0].size > 0:
+            print(f"Event triggered at t={solution.t_events[0][0]} with mass {solution.y_events[0][0]}")
             return solution.y_events[0][0] - target_mass
 
+        # If no event was triggered, return the final mass deviation
         final_mass = solution.y[0][-1]
+        print(f"Final mass at t={t}: {final_mass}")
         return final_mass - target_mass
 
 
@@ -124,8 +128,6 @@ def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     )
     
     return solution.t, solution.y[0]
-
-
 
 def MassAnalytical(M0, t):
     """Compute Mass as a function of time."""
