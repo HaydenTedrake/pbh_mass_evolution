@@ -1,18 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from scipy.optimize import root_scalar
+from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 
 def f(M):
     return 1.0
 
 def Mdot(M):
-    if M <= 0:
-        raise ValueError("Mass must be positive.")
     return -5.34e25 * f(M) / (M * M)
 
-def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10):
+def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-9):
     """
     Find the time at which the PBH mass reaches the target mass.
 
@@ -24,70 +22,61 @@ def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-10
         explosion_time (float): Time at which the PBH mass reaches the target mass.
     """
     def mass_at_time(t):
+        """Compute the mass at a given time t using solve_ivp."""
         def dMdt(t, M):
+            """Differential equation for the mass."""
             return Mdot(M)
-
-        # Event to stop integration when reaching the target mass
-        def event_reach_target(t, M):
+        
+        # Define the event to stop the integration when the target mass is reached
+        def target_mass_event(t, M):
             return M[0] - target_mass
+        target_mass_event.terminal = True
+        target_mass_event.direction = -1  # Detect crossing from above the target_mass
+        
+        # Initial conditions
+        t_span = [0, t]
+        y0 = [M0]
 
-        event_reach_target.terminal = True
-        event_reach_target.direction = -1
-
-        # Solve the ODE
-        solution = solve_ivp(
+        # Solve the differential equation
+        sol = solve_ivp(
             dMdt,
-            [0, 1e15],  # Extend time span to very large values
-            [M0],
-            method='RK45',
-            events=event_reach_target,
-            max_step=1e7  # Allow large steps
+            t_span,
+            y0,
+            method='RK45',  # Runge-Kutta method (default)
+            events=target_mass_event,
+            dense_output=True
         )
-
-
-        # Debugging: Check solver output
-        print(f"Solver status for t={t}: Success={solution.success}, Events={solution.t_events}")
-
-        # Check if the solver stopped due to the event
-        if solution.t_events[0].size > 0:
-            print(f"Event triggered at t={solution.t_events[0][0]} with mass {solution.y_events[0][0]}")
-            return solution.y_events[0][0] - target_mass
-
-        # If no event was triggered, return the final mass deviation
-        final_mass = solution.y[0][-1]
-        print(f"Final mass at t={t}: {final_mass}")
-        return final_mass - target_mass
+        
+        if sol.t_events[0].size > 0:
+            # If the event is triggered, calculate the mass difference
+            return sol.y[0][-1] - target_mass
+        else:
+            # Otherwise, return the final mass difference
+            return sol.y[0][-1] - target_mass
 
 
     # Rough estimate for the explosion time
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
-    print(f"Rough estimate: {rough_estimate}")
-    lower_bound = max(rough_estimate * 0.1, 1e-10)  # Ensure non-zero lower bound
-    print(f"Lower bound: {lower_bound}")
-    upper_bound = rough_estimate * 10
-    print(f"Upper bound: {upper_bound}")
 
-    for _ in range(max_iterations):
-        try:
-            print(f"Trying bounds: {lower_bound}, {upper_bound}")
-            result = root_scalar(
-                mass_at_time,
-                bracket=[lower_bound, upper_bound],
-                method='brentq',
-                xtol=precision
-            )
-            print(f"Result: {result}")
-            final_mass = mass_at_time(result.root)
-            print(f"Final mass: {final_mass}")
-            
-            if abs(final_mass) < precision * target_mass:
-                return result.root
-        except ValueError:
-            lower_bound *= 0.5
-            upper_bound *= 2.0
+    lower_bound = 0
+    upper_bound = rough_estimate * 2
+    log_lower = np.log10(lower_bound)
+    log_upper = np.log10(upper_bound)
 
-    print("Warning: Precise explosion time calculation did not converge.")
-    return rough_estimate
+    try:
+        while mass_at_time(10**log_lower) * mass_at_time(10**log_upper) > 0:
+            log_upper += 1  # Expand the upper bound in log-space
+            print(f"Adjusting log upper bound to: {log_upper} (10^{log_upper} = {10**log_upper})")
+    except Exception as e:
+        print(f"Error during bound adjustment: {e}")
+        return rough_estimate
+
+    try:
+        result = brentq(mass_at_time, 10**log_lower, 10**log_upper, xtol=precision)
+        print(f"Root found at: {result}")
+    except ValueError as e:
+        print("Warning: Precise explosion time calculation did not converge.")
+        return rough_estimate
 
 def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     """
