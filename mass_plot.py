@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-from scipy.optimize import brentq
 from scipy.interpolate import interp1d
 from typing import Tuple, List
 import warnings
@@ -205,7 +204,13 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     
     # Analytical solution
     t_analytical = np.arange(0, explosion_time, 10)
-    M_analytical = np.array([MassAnalytical(M0=M0, t=ti) for ti in t_analytical])
+    def MassAnalytical_vectorized(M0, t):
+        Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
+        Mass = np.cbrt(np.maximum(Mass_cubed, 0))  # Avoid negative masses
+        return Mass
+
+    M_analytical = MassAnalytical_vectorized(M0, t_analytical)
+
     
     mask_analytical = M_analytical >= target_mass
     t_analytical = t_analytical[mask_analytical]
