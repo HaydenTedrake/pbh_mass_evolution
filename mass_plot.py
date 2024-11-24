@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
+from typing import Tuple, Optional, Callable
+import warnings
 
 def f(M):
     return 1.0
@@ -10,73 +12,134 @@ def f(M):
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
 
-def find_explosion_time(M0, target_mass=1e9, max_iterations=100, precision=1e-9):
-    """
-    Find the time at which the PBH mass reaches the target mass.
+import numpy as np
+from scipy.integrate import solve_ivp
+from scipy.optimize import brentq
+import warnings
+from typing import Callable
 
+import numpy as np
+from typing import Tuple, List
+import warnings
+
+def find_explosion_time(
+    M0: float,
+    target_mass: float = 1e9,
+    rtol: float = 1e-6,
+    safety_factor: float = 0.9,
+    min_step: float = 1e-20,
+    max_step: float = 1e10
+) -> float:
+    """
+    Find PBH explosion time using adaptive time stepping.
+    
     Args:
-        M0 (float): Initial mass at t = 0 in grams.
-        target_mass (float): Target mass in grams.
-
+        M0: Initial mass in grams
+        target_mass: Target mass in grams
+        rtol: Relative tolerance for integration
+        safety_factor: Safety factor for step size adjustment
+        min_step: Minimum allowed time step
+        max_step: Maximum allowed time step
+    
     Returns:
-        explosion_time (float): Time at which the PBH mass reaches the target mass.
+        float: Explosion time
     """
-    def mass_at_time(t):
-        """Compute the mass at a given time t using solve_ivp."""
-        def dMdt(t, M):
-            """Differential equation for the mass."""
-            return Mdot(M)
+    def get_analytical_estimate() -> float:
+        """Analytical estimate for explosion time."""
+        return (M0**3 - target_mass**3) / (16.02e25 * f(M0))
+
+    def rk4_step(t: float, M: float, dt: float) -> Tuple[float, float, float]:
+        """
+        Single RK4 step with error estimate.
+        Returns (new_mass, error_estimate, actual_step)
+        """
+        # Full step
+        k1 = Mdot(M)
+        k2 = Mdot(M + 0.5 * dt * k1)
+        k3 = Mdot(M + 0.5 * dt * k2)
+        k4 = Mdot(M + dt * k3)
         
-        # Define the event to stop the integration when the target mass is reached
-        def target_mass_event(t, M):
-            return M[0] - target_mass
-        target_mass_event.terminal = True
-        target_mass_event.direction = -1  # Detect crossing from above the target_mass
+        M_new = M + (dt/6.0) * (k1 + 2*k2 + 2*k3 + k4)
         
-        # Initial conditions
-        t_span = [0, t]
-        y0 = [M0]
-
-        # Solve the differential equation
-        sol = solve_ivp(
-            dMdt,
-            t_span,
-            y0,
-            method='RK45',  # Runge-Kutta method (default)
-            events=target_mass_event,
-            dense_output=True
-        )
+        # Half steps for error estimate
+        dt_half = dt/2.0
+        k1_half = k1
+        k2_half = Mdot(M + 0.5 * dt_half * k1_half)
+        k3_half = Mdot(M + 0.5 * dt_half * k2_half)
+        k4_half = Mdot(M + dt_half * k3_half)
         
-        if sol.t_events[0].size > 0:
-            # If the event is triggered, calculate the mass difference
-            return sol.y[0][-1] - target_mass
-        else:
-            # Otherwise, return the final mass difference
-            return sol.y[0][-1] - target_mass
+        M_half = M + (dt_half/6.0) * (k1_half + 2*k2_half + 2*k3_half + k4_half)
+        
+        # Second half step
+        k1_half2 = Mdot(M_half)
+        k2_half2 = Mdot(M_half + 0.5 * dt_half * k1_half2)
+        k3_half2 = Mdot(M_half + 0.5 * dt_half * k2_half2)
+        k4_half2 = Mdot(M_half + dt_half * k3_half2)
+        
+        M_half2 = M_half + (dt_half/6.0) * (k1_half2 + 2*k2_half2 + 2*k3_half2 + k4_half2)
+        
+        error = abs(M_new - M_half2)
+        return M_new, error, dt
 
-
-    # Rough estimate for the explosion time
-    rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
-
-    lower_bound = 0
-    upper_bound = rough_estimate * 2
-    log_lower = np.log10(lower_bound)
-    log_upper = np.log10(upper_bound)
+    def adaptive_integrate() -> float:
+        """
+        Perform adaptive integration until target mass is reached.
+        """
+        t = 0.0
+        M = M0
+        dt = min(max_step, abs(M/Mdot(M)) * 0.01)  # Initial step based on characteristic time
+        
+        times: List[float] = [t]
+        masses: List[float] = [M]
+        
+        while M > target_mass:
+            # Prevent too small steps
+            if dt < min_step:
+                raise RuntimeError(f"Step size {dt} below minimum {min_step}")
+                
+            # Try step
+            M_new, error, actual_dt = rk4_step(t, M, dt)
+            
+            # Relative error
+            rel_error = error / M if M != 0 else error
+            
+            # Accept or reject step based on error
+            if rel_error <= rtol:
+                t += actual_dt
+                M = M_new
+                times.append(t)
+                masses.append(M)
+                
+                # Break if we've reached target
+                if M <= target_mass:
+                    break
+            
+            # Adjust step size using PI controller
+            dt_new = safety_factor * dt * (rtol/rel_error)**0.2
+            dt = min(max_step, max(min_step, dt_new))
+            
+            # Additional safety checks
+            if not np.isfinite(M) or not np.isfinite(dt):
+                raise RuntimeError("Non-finite values encountered")
+                
+            if len(times) > 1000000:  # Prevent infinite loops
+                raise RuntimeError("Too many steps")
+        
+        # Interpolate to find exact crossing time
+        if len(times) >= 2:
+            idx = next(i for i, m in enumerate(masses) if m <= target_mass)
+            if idx > 0:
+                t1, t2 = times[idx-1:idx+1]
+                M1, M2 = masses[idx-1:idx+1]
+                return t1 + (t2 - t1) * (M1 - target_mass)/(M1 - M2)
+        
+        return times[-1]
 
     try:
-        while mass_at_time(10**log_lower) * mass_at_time(10**log_upper) > 0:
-            log_upper += 1  # Expand the upper bound in log-space
-            print(f"Adjusting log upper bound to: {log_upper} (10^{log_upper} = {10**log_upper})")
+        return adaptive_integrate()
     except Exception as e:
-        print(f"Error during bound adjustment: {e}")
-        return rough_estimate
-
-    try:
-        result = brentq(mass_at_time, 10**log_lower, 10**log_upper, xtol=precision)
-        print(f"Root found at: {result}")
-    except ValueError as e:
-        print("Warning: Precise explosion time calculation did not converge.")
-        return rough_estimate
+        warnings.warn(f"Adaptive integration failed: {str(e)}. Using analytical estimate.")
+        return get_analytical_estimate()
 
 def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     """
@@ -139,7 +202,6 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         target_mass (float, optional): Target mass for explosion time calculation in grams
         dt (float, optional): Maximum time step for integration
     """
-    M0 = M0
     # Calculate parameters
     displacement = x - explosion_x  # in km
     boundary_time = displacement / 220  # (km/s)
@@ -148,6 +210,9 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
         explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(1))
+    
+    def dMdt(t, M):
+        return Mdot(M[0])
     
     # Analytical solution
     t_analytical = np.arange(0, explosion_time, 10)
@@ -163,6 +228,10 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Shift times by explosion time
     times_numerical_shifted = times_numerical - explosion_time
     
+    # Find the index closest to -boundary_time
+    boundary_time_idx = np.abs(times_numerical_shifted - (-boundary_time)).argmin()
+    mass_at_negative_boundary_time = masses_numerical[boundary_time_idx]
+
     # Interpolate to find M(-boundary_time)
     interpolation_function = interp1d(
         times_numerical_shifted, 
@@ -193,7 +262,8 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     plt.legend()
     
     # Add some key information as text
-    info_text = f"Explosion Time: {explosion_time:.2e} s"
+    # info_text = f"Explosion Time: {explosion_time:.2e} s"
+    info_text = f"Explosion Time: {explosion_time} s"
     plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
              verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
     
@@ -203,3 +273,4 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
 
 # Example usage with custom target mass
 times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=2200, target_mass=1e9)
+print(f"M at target x: {M_at_negative_boundary} g")
