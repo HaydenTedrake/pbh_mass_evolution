@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
-from typing import Tuple, Optional, Callable
+from typing import Tuple, List
 import warnings
 
 def f(M):
@@ -34,9 +34,8 @@ def find_explosion_time(
     Returns:
         float: Explosion time
     """
-    def get_analytical_estimate() -> float:
-        """Analytical estimate for explosion time."""
-        return (M0**3 - target_mass**3) / (16.02e25 * f(M0))
+    rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
+    print(f"Rough estimate: {rough_estimate}")
 
     def rk4_step(t: float, M: float, dt: float) -> Tuple[float, float, float]:
         """
@@ -129,7 +128,7 @@ def find_explosion_time(
         return adaptive_integrate()
     except Exception as e:
         warnings.warn(f"Adaptive integration failed: {str(e)}. Using analytical estimate.")
-        return get_analytical_estimate()
+        return rough_estimate
 
 def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     """
