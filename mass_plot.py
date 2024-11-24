@@ -12,16 +12,6 @@ def f(M):
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
 
-import numpy as np
-from scipy.integrate import solve_ivp
-from scipy.optimize import brentq
-import warnings
-from typing import Callable
-
-import numpy as np
-from typing import Tuple, List
-import warnings
-
 def find_explosion_time(
     M0: float,
     target_mass: float = 1e9,
