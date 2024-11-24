@@ -152,8 +152,8 @@ def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     event_mass_threshold.direction = -1   # Only trigger when crossing from above
 
     # Set up solver parameters
-    rtol = 1e-6
-    atol = 1e-6
+    rtol = 1e-5
+    atol = 1e-5
     
     # Use solve_ivp with adaptive step size
     solution = solve_ivp(
@@ -168,15 +168,6 @@ def solve_Mdot(M0, explosion_time, target_mass=1e9, dt=None):
     )
     
     return solution.t, solution.y[0]
-
-def MassAnalytical(M0, t):
-    """Compute Mass as a function of time."""
-
-    Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
-    Mass = np.cbrt(Mass_cubed)
-    if Mass < 0: 
-        Mass = 0
-    return Mass
 
 def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     """
@@ -204,13 +195,13 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     
     # Analytical solution
     t_analytical = np.arange(0, explosion_time, 10)
+
     def MassAnalytical_vectorized(M0, t):
         Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
         Mass = np.cbrt(np.maximum(Mass_cubed, 0))  # Avoid negative masses
         return Mass
 
     M_analytical = MassAnalytical_vectorized(M0, t_analytical)
-
     
     mask_analytical = M_analytical >= target_mass
     t_analytical = t_analytical[mask_analytical]
@@ -266,5 +257,5 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
 # Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=2200, target_mass=1e9)
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=22000, target_mass=1e9)
 print(f"M at target x: {M_at_negative_boundary} g")
