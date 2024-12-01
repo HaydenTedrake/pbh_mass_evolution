@@ -79,15 +79,17 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Calculate parameters
     displacement = np.abs(x - explosion_x)  # in km
     boundary_time = displacement / 220  # (km/s)
-    explosion_time = find_explosion_time(M0, target_mass=target_mass)  # Using target_mass
     
+    # Solve using improved method
+    times_numerical, masses_numerical, explosion_time = solve_Mdot(M0, target_mass, dt=dt)
+
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
         explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(1))
     
-    def dMdt(t, M):
-        return Mdot(M[0])
-    
+    # Shift times by explosion time
+    times_numerical_shifted = times_numerical - explosion_time
+
     # Analytical solution
     t_analytical = np.arange(0, explosion_time, 10)
 
@@ -101,12 +103,6 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     mask_analytical = M_analytical >= target_mass
     t_analytical = t_analytical[mask_analytical]
     M_analytical = M_analytical[mask_analytical]
-    
-    # Solve using improved method
-    times_numerical, masses_numerical = solve_Mdot(M0, target_mass, dt=dt)
-    
-    # Shift times by explosion time
-    times_numerical_shifted = times_numerical - explosion_time
     
     # Find the index closest to -boundary_time
     boundary_time_idx = np.abs(times_numerical_shifted - (-boundary_time)).argmin()
