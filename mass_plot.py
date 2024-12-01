@@ -46,7 +46,8 @@ def solve_Mdot(M0, target_mass=1e9, dt=None):
         method='RK45',
         rtol=rtol,
         atol=atol,
-        max_step=dt if dt is not None else np.inf,
+        #max_step=dt if dt is not None else np.inf,
+        #first_step=100000,  # this was a simple test from Russ (don't trust it!)
         events=event_mass_threshold
     )
 
@@ -82,6 +83,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     
     # Solve using improved method
     times_numerical, masses_numerical, explosion_time = solve_Mdot(M0, target_mass, dt=dt)
+    print("finished solve_Mdot")
 
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
@@ -91,7 +93,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     times_numerical_shifted = times_numerical - explosion_time
 
     # Analytical solution
-    t_analytical = np.arange(0, explosion_time, 10)
+    t_analytical = np.linspace(0, explosion_time, 100)
 
     def MassAnalytical_vectorized(M0, t):
         Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
@@ -107,6 +109,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Find the index closest to -boundary_time
     boundary_time_idx = np.abs(times_numerical_shifted - (-boundary_time)).argmin()
     mass_at_negative_boundary_time = masses_numerical[boundary_time_idx]
+    print("Before interpolation")
 
     # Interpolate to find M(-boundary_time)
     interpolation_function = interp1d(
@@ -117,36 +120,38 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         fill_value="extrapolate"
     )
     mass_at_negative_boundary_time = interpolation_function(-boundary_time)
-    
-    # Create the plot with logarithmic scales
-    plt.figure(figsize=(12, 8))
-    
-    # Plot analytical solution in blue
-    plt.plot(t_analytical - explosion_time, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
+    print(f"M at target x: {mass_at_negative_boundary_time} g")
 
-    # Plot numerical solution
-    plt.semilogy(times_numerical_shifted, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
-    
-    # Highlight M(-boundary_time)
-    plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target x ≈ {mass_at_negative_boundary_time:.2e} g", zorder=5)
-    
-    # Customize the plot
-    plt.xlabel("Time relative to explosion time (s)")
-    plt.ylabel("PBH Mass (g)")
-    plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g)")
-    plt.grid(True, which="both", ls="-", alpha=0.2)
-    plt.legend()
-    
-    # Add some key information as text
-    # info_text = f"Explosion Time: {explosion_time:.2e} s"
-    info_text = f"Explosion Time: {explosion_time} s"
-    plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
-             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-    
-    plt.show()
+    if (True):  # enable/disable plotting
+        # Create the plot with logarithmic scales
+        plt.figure(figsize=(12, 8))
+        
+        # Plot analytical solution in blue
+        plt.plot(t_analytical - explosion_time, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
+
+        # Plot numerical solution
+        plt.semilogy(times_numerical_shifted, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
+        
+        # Highlight M(-boundary_time)
+        plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target x ≈ {mass_at_negative_boundary_time:.2e} g", zorder=5)
+        
+        # Customize the plot
+        plt.xlabel("Time relative to explosion time (s)")
+        plt.ylabel("PBH Mass (g)")
+        plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g)")
+        plt.grid(True, which="both", ls="-", alpha=0.2)
+        plt.legend()
+        
+        # Add some key information as text
+        # info_text = f"Explosion Time: {explosion_time:.2e} s"
+        info_text = f"Explosion Time: {explosion_time} s"
+        plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
+                verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        
+        plt.show()
     
     return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
 # Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e11, x=22000, target_mass=1e9)
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e15, x=22000, target_mass=1e9)
 print(f"M at target x: {M_at_negative_boundary} g")
