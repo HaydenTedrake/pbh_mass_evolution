@@ -10,7 +10,7 @@ def f(M):
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
 
-def solve_Mdot(M0, target_mass=1e9, dt=None):
+def solve_Mdot(M0, target_mass=1e9):
     """
     Solve the mass evolution equation using scipy's solve_ivp with adaptive step size.
     
