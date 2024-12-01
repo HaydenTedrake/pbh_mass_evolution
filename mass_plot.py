@@ -4,6 +4,8 @@ from scipy.integrate import solve_ivp
 from scipy.interpolate import interp1d
 from typing import Tuple, List
 
+age_of_universe = 4.35e17  # in seconds
+
 def f(M):
     return 1.0
 
@@ -48,7 +50,8 @@ def solve_Mdot(M0, target_mass=1e9):
         atol=atol,
         #max_step=dt if dt is not None else np.inf,
         #first_step=100000,  # this was a simple test from Russ (don't trust it!)
-        events=event_mass_threshold
+        events=event_mass_threshold,
+        dense_output=True
     )
 
     explosion_time = solution.t[-1]
@@ -59,6 +62,11 @@ def solve_Mdot(M0, target_mass=1e9):
 
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
     print(f"Rough estimate: {rough_estimate}")
+
+    M0_exploding_now = solution.sol(explosion_time - age_of_universe)[0]
+    M0_exploding_3moago = solution.sol(explosion_time - age_of_universe + 7884e3)[0]
+
+    print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago}")
     
     return solution.t, solution.y[0], explosion_time
 
