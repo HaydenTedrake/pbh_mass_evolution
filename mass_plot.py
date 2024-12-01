@@ -61,10 +61,13 @@ def solve_Mdot(M0, target_mass=1e9):
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
     print(f"Rough estimate: {rough_estimate} s")
 
-    M0_exploding_now = solution.sol(explosion_time - age_of_universe)[0]
-    M0_exploding_3moago = solution.sol(explosion_time - age_of_universe + 7884e3)[0]
+    M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
+    M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
 
     print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
+
+    # checking this value ^^
+    print(f"checking: {-Mdot(M0_exploding_now) * 7884e3}")
     
     return solution.t, solution.y[0], explosion_time
 
