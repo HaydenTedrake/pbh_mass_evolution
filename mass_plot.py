@@ -92,18 +92,12 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Shift times by explosion time
     times_numerical_shifted = times_numerical - explosion_time
 
-    def exp_time_points(explosion_time, num_points=100):
-        exp_space = np.exp(np.linspace(0, 1, num_points))
-        return explosion_time * (exp_space - exp_space[0]) / (exp_space[-1] - exp_space[0])
-    
-    def log_time_points(explosion_time, num_points=100):
-        epsilon = explosion_time / 1e10
-        return np.logspace(np.log10(epsilon), np.log10(explosion_time), num_points)
+    def exp_time_points(T, num_points=100):
+        exp_space = np.exp(np.linspace(0, 5, num_points))
+        return T - T * (exp_space - exp_space[0]) / (exp_space[-1] - exp_space[0])
     
     # Analytical solution
     t_analytical = exp_time_points(explosion_time)
-    # t_analytical = log_time_points(explosion_time)
-    print(f"t_analytical: {t_analytical}")
 
     def MassAnalytical_vectorized(M0, t):
         Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
@@ -112,24 +106,9 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
 
     M_analytical = MassAnalytical_vectorized(M0, t_analytical)
     
-    # mask_analytical = M_analytical >= target_mass
-    # t_analytical = t_analytical[mask_analytical]
-    # M_analytical = M_analytical[mask_analytical]
-    
     # Find the index closest to -boundary_time
     boundary_time_idx = np.abs(times_numerical_shifted - (-boundary_time)).argmin()
     mass_at_negative_boundary_time = masses_numerical[boundary_time_idx]
-    # print("Before interpolation")
-
-    # Interpolate to find M(-boundary_time)
-    interpolation_function = interp1d(
-        times_numerical_shifted, 
-        masses_numerical, 
-        kind='linear', 
-        bounds_error=False, 
-        fill_value="extrapolate"
-    )
-    mass_at_negative_boundary_time = interpolation_function(-boundary_time)
 
     plot = True
     if plot:  # enable/disable plotting
