@@ -101,8 +101,8 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         return np.logspace(np.log10(epsilon), np.log10(explosion_time), num_points)
     
     # Analytical solution
-    # t_analytical = exp_time_points(explosion_time)
-    t_analytical = log_time_points(explosion_time)
+    t_analytical = exp_time_points(explosion_time)
+    # t_analytical = log_time_points(explosion_time)
     print(f"t_analytical: {t_analytical}")
 
     def MassAnalytical_vectorized(M0, t):
