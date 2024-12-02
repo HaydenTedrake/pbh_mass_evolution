@@ -142,7 +142,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         
         # Add some key information as text
         # info_text = f"Explosion Time: {explosion_time:.2e} s"
-        info_text = f"Explosion Time: {explosion_time} s"
+        info_text = f"Explosion Time: {explosion_time:.2e} s"
         plt.text(0.02, 0.98, info_text, transform=plt.gca().transAxes,
                 verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
