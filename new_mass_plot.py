@@ -64,7 +64,6 @@ def solve_Mdot(M0, target_mass=1e9):
     M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
     M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
 
-    print(f"Formation mass of a PBH exploding now: {M0_exploding_now} g")
     print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
 
     # checking this value ^^
