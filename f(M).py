@@ -10,16 +10,16 @@ def f(M):
         'mu': 0.106,     # muon
         'd': 0.34,       # down quark
         's': 0.5,        # strange quark
-        'c': 1.78,       # charm quark
-        'T': 1.87,       # tau
+        'c': 1.87,       # charm quark
+        'T': 1.78,       # tau
         'b': 5.28,       # bottom quark
         't': 100,        # top quark (unobserved at time of paper)
         'g': 0.6         # gluon (effective mass)
     }
     
     # Beta values (assuming s=1/2 and s=1 as mentioned)
-    beta_half = 1/2
-    beta_one = 1
+    beta_half = 4.53
+    beta_one = 6.04
     
     # Base constant from the original equation
     base = 1.569
