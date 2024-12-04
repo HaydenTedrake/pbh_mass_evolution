@@ -97,9 +97,6 @@ def solve_Mdot(M0, target_mass=1e9):
 
     print(f"Formation mass of a PBH exploding now: {M0_exploding_now} g")
     print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
-
-    # checking this value ^^
-    print(f"checking: {-Mdot(M0_exploding_now) * 7884e3}")
     
     return solution.t, solution.y[0], explosion_time
 
