@@ -89,9 +89,6 @@ def solve_Mdot(M0, target_mass=1e9):
     print(f"Explosion time: {explosion_time} s")
     print(f"Explosion mass: {explosion_mass} g")
 
-    rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * f(M0))
-    print(f"Rough estimate: {rough_estimate} s")
-
     M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
     M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
 
@@ -123,22 +120,24 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     times_numerical, masses_numerical, explosion_time = solve_Mdot(M0, target_mass)
     # print("finished solve_Mdot")
 
+    rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * 1.0)
+    print(f"Rough estimate: {rough_estimate} s")
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
-        explosion_time = (np.power(M0, 3) - np.power(target_mass, 3)) / (16.02e25 * f(1))
+        explosion_time = rough_estimate
     
     # Shift times by explosion time
     times_numerical_shifted = times_numerical - explosion_time
 
-    def exp_time_points(T, num_points=100):
+    def exp_time_points(T, num_points=1000000):
         exp_space = np.exp(np.linspace(0, 5, num_points))
         return T - T * (exp_space - exp_space[0]) / (exp_space[-1] - exp_space[0])
     
     # Analytical solution
-    t_analytical = exp_time_points(explosion_time)
+    t_analytical = exp_time_points(rough_estimate)
 
     def MassAnalytical_vectorized(M0, t):
-        Mass_cubed = (-16.02e25 * f(1) * t + np.power(M0, 3))
+        Mass_cubed = (-16.02e25 * 1.0 * t + np.power(M0, 3))
         Mass = np.cbrt(np.maximum(Mass_cubed, 0))  # Avoid negative masses
         return Mass
 
