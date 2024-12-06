@@ -107,8 +107,8 @@ def PBHDemo(M0, explosion_coordinate, velocity, boundary_time, target_mass=1e9):
         dt (float, optional): Maximum time step for integration
     """
     # Calculate parameters
-    vx, vy = velocity
-    explosion_x, explosion_y = explosion_coordinate
+    vx, vy, vz = velocity
+    explosion_x, explosion_y, explosion_z = explosion_coordinate
     
     # Solve using improved method
     times_numerical, masses_numerical, explosion_time = solve_Mdot(M0, target_mass)
@@ -145,9 +145,11 @@ def PBHDemo(M0, explosion_coordinate, velocity, boundary_time, target_mass=1e9):
     time_to_boundary = -boundary_time
     displacement_x = time_to_boundary * vx
     displacement_y = time_to_boundary * vy
+    displacement_z = time_to_boundary * vz
     position_x = explosion_x + displacement_x
     position_y = explosion_y + displacement_y
-    position = (position_x, position_y)
+    position_z = explosion_z + displacement_z
+    position = (position_x, position_y, position_z)
 
     plot = True
     if plot:  # enable/disable plotting
@@ -164,7 +166,7 @@ def PBHDemo(M0, explosion_coordinate, velocity, boundary_time, target_mass=1e9):
         plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target t ≈ {mass_at_negative_boundary_time:.2e} g" , zorder=5)
         
         plt.annotate(
-            f"Position:\n({position_x:.2f}, {position_y:.2f})",
+            f"Position:\n({position_x:.2f}, {position_y:.2f}, {position_z:.2f})",
             xy=(-boundary_time, mass_at_negative_boundary_time),
             xytext=(-boundary_time * 0.8, mass_at_negative_boundary_time * 1.2),
             arrowprops=dict(facecolor='black', arrowstyle="->"),
@@ -192,8 +194,8 @@ def PBHDemo(M0, explosion_coordinate, velocity, boundary_time, target_mass=1e9):
 # Example usage with custom target mass
 times_shifted, masses, M_at_negative_boundary, position = PBHDemo(
     M0=1e15, 
-    explosion_coordinate=(0, 0), 
-    velocity=(220, 0), 
+    explosion_coordinate=(0, 0, 0), 
+    velocity=(220, 0, 0), 
     boundary_time=100000, 
     target_mass=1e9
 )
