@@ -89,15 +89,9 @@ def solve_Mdot(M0, target_mass=1e9):
     print(f"Explosion time: {explosion_time} s")
     print(f"Explosion mass: {explosion_mass} g")
 
-    M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
-    M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
-
-    print(f"Formation mass of a PBH exploding now: {M0_exploding_now} g")
-    print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
-    
     return solution.t, solution.y[0], explosion_time
 
-def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
+def PBHDemo(M0, explosion_coordinate, velocity, boundary_time, target_mass=1e9):
     """
     Simulates and plots the mass evolution from the formation (initial) mass, M0,
     until the mass reaches the target mass. We treat the time when the mass reaches
@@ -113,8 +107,8 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         dt (float, optional): Maximum time step for integration
     """
     # Calculate parameters
-    displacement = np.abs(x - explosion_x)  # in km
-    boundary_time = displacement / 220  # (km/s)
+    vx, vy = velocity
+    explosion_x, explosion_y = explosion_coordinate
     
     # Solve using improved method
     times_numerical, masses_numerical, explosion_time = solve_Mdot(M0, target_mass)
@@ -146,6 +140,14 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     # Find the index closest to -boundary_time
     boundary_time_idx = np.abs(times_numerical_shifted - (-boundary_time)).argmin()
     mass_at_negative_boundary_time = masses_numerical[boundary_time_idx]
+    
+    # Calculate position at -boundary_time
+    time_to_boundary = -boundary_time
+    displacement_x = time_to_boundary * vx
+    displacement_y = time_to_boundary * vy
+    position_x = explosion_x + displacement_x
+    position_y = explosion_y + displacement_y
+    position = (position_x, position_y)
 
     plot = True
     if plot:  # enable/disable plotting
@@ -159,8 +161,17 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         plt.semilogy(times_numerical_shifted, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
         
         # Highlight M(-boundary_time)
-        plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target x ≈ {mass_at_negative_boundary_time:.2e} g", zorder=5)
+        plt.scatter(-boundary_time, mass_at_negative_boundary_time, color='green', label=f"M at target t ≈ {mass_at_negative_boundary_time:.2e} g" , zorder=5)
         
+        plt.annotate(
+            f"Position:\n({position_x:.2f}, {position_y:.2f})",
+            xy=(-boundary_time, mass_at_negative_boundary_time),
+            xytext=(-boundary_time * 0.8, mass_at_negative_boundary_time * 1.2),
+            arrowprops=dict(facecolor='black', arrowstyle="->"),
+            fontsize=10,
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5)
+        )
+
         # Customize the plot
         plt.xlabel("Time relative to explosion time (s)")
         plt.ylabel("PBH Mass (g)")
@@ -176,8 +187,15 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
         
         plt.show()
     
-    return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
+    return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time, position
 
 # Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e15, x=2200000000000000, target_mass=1e9)
-print(f"M at target x: {M_at_negative_boundary} g")
+times_shifted, masses, M_at_negative_boundary, position = PBHDemo(
+    M0=1e15, 
+    explosion_coordinate=(0, 0), 
+    velocity=(220, 0), 
+    boundary_time=100000, 
+    target_mass=1e9
+)
+
+print(f"The PBH has mass of {M_at_negative_boundary} g with position {position} km at target time before the explosion.")

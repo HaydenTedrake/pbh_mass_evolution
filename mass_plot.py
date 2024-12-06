@@ -97,7 +97,7 @@ def solve_Mdot(M0, target_mass=1e9):
     
     return solution.t, solution.y[0], explosion_time
 
-def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
+def PBHDemo(explosion_x, M0, x, target_mass=1e9):
     """
     Simulates and plots the mass evolution from the formation (initial) mass, M0,
     until the mass reaches the target mass. We treat the time when the mass reaches
@@ -179,5 +179,5 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9, dt=100):
     return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
 # Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e15, x=2200000000000000, target_mass=1e9)
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e15, x=22000000, target_mass=1e9)
 print(f"M at target x: {M_at_negative_boundary} g")
