@@ -36,7 +36,7 @@ def f(M):
         0.963 * np.exp(-M / (beta_one * masses['g']))
     )
     
-    return result
+    return 1.0
 
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
@@ -179,5 +179,5 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
     return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
 # Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=1e15, x=22000000, target_mass=1e9)
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=4e14, x=22000000, target_mass=1e9)
 print(f"M at target x: {M_at_negative_boundary} g")
