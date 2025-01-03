@@ -16,16 +16,31 @@ def joules_to_gev(joules):
 
 def grams_to_gev(grams):
     # Constants
-    c = 2.99792458e8      # speed of light in m/s
-    joules_per_gram = c*c  # E = mc²
+    c = 2.998e8           # Speed of light in m/s
     eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
     gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
     
-    # Convert grams to GeV using E = mc²
-    joules = grams * joules_per_gram
-    gev = joules * eV_per_joule * gev_per_ev
+    # Convert mass to energy using E = mc²
+    energy_joules = grams * (c ** 2)
     
-    return gev
+    # Convert energy from Joules to GeV using our previous function
+    energy_gev = energy_joules * eV_per_joule * gev_per_ev
+    
+    return energy_gev
+
+def kelvin_to_gev(temperature_kelvin):
+    # Constants
+    k_b = 1.380649e-23    # Boltzmann constant in J/K
+    eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
+    gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
+    
+    # Convert temperature to energy using E = k_b * T
+    energy_joules = k_b * temperature_kelvin
+    
+    # Convert to GeV using our previous conversion factors
+    energy_gev = energy_joules * eV_per_joule * gev_per_ev
+    
+    return energy_gev
 
 def f(M):
     # Masses in GeV from Table I
