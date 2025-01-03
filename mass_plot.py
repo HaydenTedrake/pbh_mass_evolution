@@ -4,6 +4,16 @@ from scipy.integrate import solve_ivp
 
 age_of_universe = 4.35e17  # in seconds
 
+def joules_to_gev(joules):
+    # Constants
+    eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
+    gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
+    
+    # Convert Joules to GeV
+    gev = joules * eV_per_joule * gev_per_ev
+    
+    return gev
+
 def f(M):
     # Masses in GeV from Table I
     masses = {
