@@ -14,6 +14,19 @@ def joules_to_gev(joules):
     
     return gev
 
+def grams_to_gev(grams):
+    # Constants
+    c = 2.99792458e8      # speed of light in m/s
+    joules_per_gram = c*c  # E = mc²
+    eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
+    gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
+    
+    # Convert grams to GeV using E = mc²
+    joules = grams * joules_per_gram
+    gev = joules * eV_per_joule * gev_per_ev
+    
+    return gev
+
 def f(M):
     # Masses in GeV from Table I
     masses = {
