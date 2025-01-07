@@ -2,18 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import LogFormatter
 
-def bh_temp_gev(mass_g):
-    """Calculate black hole temperature in GeV for a given mass in grams"""
-    return 1.06e13 / mass_g
+def particle_temp_gev(mass_gev):
+    """Convert particle mass to equivalent temperature in GeV"""
+    return mass_gev  # E = mc², and we're already in GeV
 
-def gev_to_grams(mass_gev):
-    """Convert mass from GeV to grams using E = mc²"""
-    gev_to_joule = 1.602176634e-10  # 1 GeV in Joules
-    c = 2.998e8  # Speed of light in m/s
-    
-    # E = mc² -> m = E/c²
-    mass_kg = (mass_gev * gev_to_joule) / (c * c)
-    return mass_kg * 1000  # Convert kg to g
+def bh_mass_for_temp(temp_gev):
+    """Calculate black hole mass in grams that would have given temperature in GeV
+    Using MacGibbon equation T = 1.06e13/M_g solved for M_g"""
+    return 1.06e13 / temp_gev
 
 # Standard Model particles with their masses in GeV
 particles = {
@@ -37,15 +33,17 @@ particles = {
 }
 
 # Create lists for plotting, excluding massless particles
-masses_gev = []
+bh_masses_g = []
 temps_gev = []
 names = []
 particle_types = []
 
-for particle, mass in particles.items():
-    if mass > 0:  # Skip massless particles
-        masses_gev.append(mass)
-        temps_gev.append(bh_temp_gev(gev_to_grams(mass)))
+for particle, mass_gev in particles.items():
+    if mass_gev > 0:  # Skip massless particles
+        temp_gev = particle_temp_gev(mass_gev)
+        temps_gev.append(temp_gev)
+        bh_mass_g = bh_mass_for_temp(temp_gev)
+        bh_masses_g.append(bh_mass_g)
         names.append(particle)
         
         # Determine particle type for color coding
@@ -69,13 +67,13 @@ colors = plt.cm.tab10(np.linspace(0, 1, len(unique_types)))
 color_map = dict(zip(unique_types, colors))
 
 # Plot each point with different colors per particle type
-for i in range(len(masses_gev)):
-    plt.scatter(masses_gev[i], temps_gev[i], 
+for i in range(len(bh_masses_g)):
+    plt.scatter(bh_masses_g[i], temps_gev[i], 
                color=color_map[particle_types[i]], 
                s=100, 
                label=particle_types[i] if particle_types[i] not in plt.gca().get_legend_handles_labels()[1] else "")
-    plt.annotate(names[i], 
-                (masses_gev[i], temps_gev[i]),
+    plt.annotate(f'{names[i]}\n(BH: {bh_masses_g[i]:.2e}g)', 
+                (bh_masses_g[i], temps_gev[i]),
                 xytext=(5, 5), 
                 textcoords='offset points',
                 fontsize=8)
@@ -85,9 +83,9 @@ plt.xscale('log')
 plt.yscale('log')
 
 # Labels and title
-plt.xlabel('Particle Mass (GeV)', fontsize=12)
-plt.ylabel('Black Hole Temperature (GeV)', fontsize=12)
-plt.title('Standard Model Particles:\nEquivalent Black Hole Temperatures vs Particle Masses', 
+plt.xlabel('Black Hole Mass (g)', fontsize=12)
+plt.ylabel('Temperature (GeV)', fontsize=12)
+plt.title('Standard Model Particles:\nParticle Temperatures and Equivalent Black Hole Masses', 
           fontsize=14, pad=20)
 
 # Add grid
@@ -101,3 +99,10 @@ plt.tight_layout()
 
 # Show the plot
 plt.show()
+
+# Print out the values for verification
+print("\nParticle temperatures and equivalent black hole masses:")
+for i in range(len(names)):
+    print(f"{names[i]}:")
+    print(f"  Temperature: {temps_gev[i]:.6e} GeV")
+    print(f"  BH Mass: {bh_masses_g[i]:.6e} g")
