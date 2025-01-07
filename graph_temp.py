@@ -1,75 +1,103 @@
-import math
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import LogFormatter
 
-def bh_temperature_in_GeV(mass_g):
-    # Constants
-    hbar_eV_s = 6.582e-16  # Reduced Planck constant in eV·s
-    c = 3.0e8  # Speed of light in m/s
-    G = 6.67e-11  # Gravitational constant in m^3·kg^-1·s^-2
-    g_to_kg = 1e-3  # Conversion factor from grams to kilograms
-    
-    # Convert mass from grams to kilograms
-    mass_kg = mass_g * g_to_kg
-    
-    # MacGibbon's equation (temperature in eV)
-    temperature_eV = (hbar_eV_s * c**3) / (8 * math.pi * G * mass_kg)
-    
-    # Convert eV to GeV (1 GeV = 10^9 eV)
-    temperature_GeV = temperature_eV / 1e9
-    
-    return temperature_GeV
+def bh_temp_gev(mass_g):
+    """Calculate black hole temperature in GeV for a given mass in grams"""
+    return 1.06e13 / mass_g
 
-# Masses of the 17 Standard Model particles in GeV/c^2 (approximate values)
-# Format: {"particle_name": mass_in_GeV}
-particle_masses = {
-    "up quark": 2.3e-3,
-    "down quark": 4.8e-3,
-    "charm quark": 1.28,
-    "strange quark": 0.095,
-    "top quark": 173,
-    "bottom quark": 4.18,
-    "electron": 0.000511,
-    "muon": 0.106,
-    "tau": 1.78,
-    "electron neutrino": 1e-10,  # upper bound
-    "muon neutrino": 1.9e-10,    # upper bound
-    "tau neutrino": 1.8e-10,     # upper bound
-    "photon": 0,  # massless particle
-    "gluon": 0,   # massless particle
-    "Z boson": 91.2,
-    "W boson": 80.4,
-    "Higgs boson": 125
+def gev_to_grams(mass_gev):
+    """Convert mass from GeV to grams using E = mc²"""
+    gev_to_joule = 1.602176634e-10  # 1 GeV in Joules
+    c = 2.998e8  # Speed of light in m/s
+    
+    # E = mc² -> m = E/c²
+    mass_kg = (mass_gev * gev_to_joule) / (c * c)
+    return mass_kg * 1000  # Convert kg to g
+
+# Standard Model particles with their masses in GeV
+particles = {
+    'Electron neutrino': 1e-9,  # Approximate upper limit
+    'Muon neutrino': 1e-9,     # Approximate upper limit
+    'Tau neutrino': 1e-9,      # Approximate upper limit
+    'Electron': 0.000511,
+    'Muon': 0.1057,
+    'Tau': 1.777,
+    'Up quark': 0.002,
+    'Down quark': 0.005,
+    'Charm quark': 1.275,
+    'Strange quark': 0.095,
+    'Top quark': 173.0,
+    'Bottom quark': 4.18,
+    'Photon': 0,               # Massless
+    'Gluon': 0,               # Massless
+    'Z boson': 91.1876,
+    'W boson': 80.379,
+    'Higgs boson': 125.18
 }
 
-# Convert particle masses from GeV/c^2 to grams
-GeV_to_kg = 1.783e-27  # 1 GeV/c^2 = 1.783e-27 kg
-kg_to_g = 1e3  # 1 kg = 1000 g
+# Create lists for plotting, excluding massless particles
+masses_gev = []
+temps_gev = []
+names = []
+particle_types = []
 
-particle_masses_in_g = {name: mass * GeV_to_kg * kg_to_g for name, mass in particle_masses.items()}
+for particle, mass in particles.items():
+    if mass > 0:  # Skip massless particles
+        masses_gev.append(mass)
+        temps_gev.append(bh_temp_gev(gev_to_grams(mass)))
+        names.append(particle)
+        
+        # Determine particle type for color coding
+        if 'neutrino' in particle.lower():
+            particle_types.append('Leptons (Neutrinos)')
+        elif particle in ['Electron', 'Muon', 'Tau']:
+            particle_types.append('Leptons (Charged)')
+        elif 'quark' in particle.lower():
+            particle_types.append('Quarks')
+        elif 'boson' in particle.lower():
+            particle_types.append('Bosons')
+        else:
+            particle_types.append('Other')
 
-# Calculate black hole temperatures for each particle mass
-particle_temperatures = {name: bh_temperature_in_GeV(mass) for name, mass in particle_masses_in_g.items() if mass > 0}
+# Create the plot
+plt.figure(figsize=(15, 10))
 
-# Filter out massless particles for plotting
-filtered_masses = {name: mass for name, mass in particle_masses.items() if mass > 0}
+# Create a color map for particle types
+unique_types = list(set(particle_types))
+colors = plt.cm.tab10(np.linspace(0, 1, len(unique_types)))
+color_map = dict(zip(unique_types, colors))
 
-# Extract mass and temperature values for plotting
-x_values = list(filtered_masses.values())
-y_values = list(particle_temperatures.values())
+# Plot each point with different colors per particle type
+for i in range(len(masses_gev)):
+    plt.scatter(masses_gev[i], temps_gev[i], 
+               color=color_map[particle_types[i]], 
+               s=100, 
+               label=particle_types[i] if particle_types[i] not in plt.gca().get_legend_handles_labels()[1] else "")
+    plt.annotate(names[i], 
+                (masses_gev[i], temps_gev[i]),
+                xytext=(5, 5), 
+                textcoords='offset points',
+                fontsize=8)
 
-# Plotting
-plt.figure(figsize=(10, 6))
-plt.scatter(x_values, y_values, color='blue')
+# Set log scale for both axes
 plt.xscale('log')
 plt.yscale('log')
-plt.xlabel("Mass (GeV/c²)")
-plt.ylabel("Black Hole Temperature (GeV)")
-plt.title("Temperature of Black Holes Corresponding to Standard Model Particles")
-plt.grid(True, which="both", ls="--")
 
-# Annotate points with particle names
-for particle, mass in filtered_masses.items():
-    plt.annotate(particle, (mass, particle_temperatures[particle]), fontsize=8, ha='right')
+# Labels and title
+plt.xlabel('Particle Mass (GeV)', fontsize=12)
+plt.ylabel('Black Hole Temperature (GeV)', fontsize=12)
+plt.title('Standard Model Particles:\nEquivalent Black Hole Temperatures vs Particle Masses', 
+          fontsize=14, pad=20)
 
+# Add grid
+plt.grid(True, which="both", ls="-", alpha=0.2)
+
+# Add legend
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+# Adjust layout to prevent label cutoff
+plt.tight_layout()
+
+# Show the plot
 plt.show()
-
