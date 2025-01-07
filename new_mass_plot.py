@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
+import math
 
 age_of_universe = 4.35e17  # in seconds
 
@@ -41,6 +42,24 @@ def kelvin_to_gev(temperature_kelvin):
     energy_gev = energy_joules * eV_per_joule * gev_per_ev
     
     return energy_gev
+
+def bh_temperature_in_GeV(mass_g):
+    # Constants
+    hbar_eV_s = 6.582e-16  # Reduced Planck constant in eV·s
+    c = 3.0e8  # Speed of light in m/s
+    G = 6.67e-11  # Gravitational constant in m^3·kg^-1·s^-2
+    g_to_kg = 1e-3  # Conversion factor from grams to kilograms
+    
+    # Convert mass from grams to kilograms
+    mass_kg = mass_g * g_to_kg
+    
+    # MacGibbon's equation (temperature in eV)
+    temperature_eV = (hbar_eV_s * c**3) / (8 * math.pi * G * mass_kg)
+    
+    # Convert eV to GeV (1 GeV = 10^9 eV)
+    temperature_GeV = temperature_eV / 1e9
+    
+    return temperature_GeV
 
 def f(M):
     # Masses in GeV from Table I
