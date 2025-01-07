@@ -72,7 +72,7 @@ for i in range(len(bh_masses_g)):
                color=color_map[particle_types[i]], 
                s=100, 
                label=particle_types[i] if particle_types[i] not in plt.gca().get_legend_handles_labels()[1] else "")
-    plt.annotate(f'{names[i]}\n(BH: {bh_masses_g[i]:.2e}g)', 
+    plt.annotate(names[i], 
                 (bh_masses_g[i], temps_gev[i]),
                 xytext=(5, 5), 
                 textcoords='offset points',
@@ -85,7 +85,7 @@ plt.yscale('log')
 # Labels and title
 plt.xlabel('Black Hole Mass (g)', fontsize=12)
 plt.ylabel('Temperature (GeV)', fontsize=12)
-plt.title('Standard Model Particles:\nParticle Temperatures and Equivalent Black Hole Masses', 
+plt.title('Particle Temperature vs Black Hole Mass', 
           fontsize=14, pad=20)
 
 # Add grid
