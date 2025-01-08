@@ -62,6 +62,13 @@ def bh_temperature_in_GeV(mass_g):
     return temperature_GeV
 
 def f(M):
+    """
+    Calculate f(M) with M in grams
+    M_grams: black hole mass in grams
+    """
+    # First convert M from grams to GeV
+    M_GeV = grams_to_gev(M)
+    
     # Masses in GeV from Table I
     masses = {
         'mu': 0.106,     # muon
@@ -83,14 +90,14 @@ def f(M):
     
     # Detailed calculation following the exact equation
     result = base + 0.569 * (
-        np.exp(-M / (beta_half * masses['mu'])) +
-        3 * np.exp(-M / (beta_half * masses['d'])) +
-        3 * np.exp(-M / (beta_half * masses['s'])) +
-        3 * np.exp(-M / (beta_half * masses['c'])) +
-        np.exp(-M / (beta_half * masses['T'])) +
-        3 * np.exp(-M / (beta_half * masses['b'])) +
-        3 * np.exp(-M / (beta_half * masses['t'])) +
-        0.963 * np.exp(-M / (beta_one * masses['g']))
+        np.exp(-M_GeV / (beta_half * masses['mu'])) +
+        3 * np.exp(-M_GeV / (beta_half * masses['d'])) +
+        3 * np.exp(-M_GeV / (beta_half * masses['s'])) +
+        3 * np.exp(-M_GeV / (beta_half * masses['c'])) +
+        np.exp(-M_GeV / (beta_half * masses['T'])) +
+        3 * np.exp(-M_GeV / (beta_half * masses['b'])) +
+        3 * np.exp(-M_GeV / (beta_half * masses['t'])) +
+        0.963 * np.exp(-M_GeV / (beta_one * masses['g']))
     )
     
     return result
