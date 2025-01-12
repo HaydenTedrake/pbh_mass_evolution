@@ -66,38 +66,31 @@ def f(M):
     Calculate f(M) with M in grams
     M_grams: black hole mass in grams
     """
-    # First convert M from grams to GeV
-    M_GeV = grams_to_gev(M)
-    
-    # Masses in GeV from Table I
-    masses = {
-        'mu': 0.106,     # muon
-        'd': 0.34,       # down quark
-        's': 0.5,        # strange quark
-        'c': 1.87,       # charm quark
-        'T': 1.78,       # tau
-        'b': 5.28,       # bottom quark
-        't': 100,        # top quark (unobserved at time of paper)
-        'g': 0.6         # gluon (effective mass)
+    # in grams from Table I
+    beta_masses = {
+        'mu': 4.53e14,     # muon
+        'd': 1.6e14,       # down quark
+        's': 9.6e13,        # strange quark
+        'c': 2.56e13,       # charm quark
+        'T': 2.68e13,       # tau
+        'b': 9.07e12,       # bottom quark
+        't': 0.48e12,        # top quark (unobserved at time of paper)
+        'g': 1.1e14         # gluon (effective mass)
     }
-    
-    # Beta values (assuming s=1/2 and s=1 as mentioned)
-    beta_half = 4.53
-    beta_one = 6.04
     
     # Base constant from the original equation
     base = 1.569
     
     # Detailed calculation following the exact equation
     result = base + 0.569 * (
-        np.exp(-M_GeV / (beta_half * masses['mu'])) +
-        3 * np.exp(-M_GeV / (beta_half * masses['d'])) +
-        3 * np.exp(-M_GeV / (beta_half * masses['s'])) +
-        3 * np.exp(-M_GeV / (beta_half * masses['c'])) +
-        np.exp(-M_GeV / (beta_half * masses['T'])) +
-        3 * np.exp(-M_GeV / (beta_half * masses['b'])) +
-        3 * np.exp(-M_GeV / (beta_half * masses['t'])) +
-        0.963 * np.exp(-M_GeV / (beta_one * masses['g']))
+        np.exp(-M / (beta_masses['mu'])) +
+        3 * np.exp(-M / (beta_masses['d'])) +
+        3 * np.exp(-M / (beta_masses['s'])) +
+        3 * np.exp(-M / (beta_masses['c'])) +
+        np.exp(-M / (beta_masses['T'])) +
+        3 * np.exp(-M / (beta_masses['b'])) +
+        3 * np.exp(-M / (beta_masses['t'])) +
+        0.963 * np.exp(-M / (beta_masses['g']))
     )
     
     return result
