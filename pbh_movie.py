@@ -6,23 +6,13 @@ from scipy.special import gamma
 
 # Constants
 age_of_universe = 4.35e17  # seconds
-rho_DM = 0.403  # GeV/cm^3 (from paper)
 
 def f(M):
     """Calculate f(M) with M in grams"""
     beta_masses = {
-        'mu': 4.53e14,     # muon
-        'd': 1.6e14,       # down quark
-        's': 9.6e13,       # strange quark
-        'c': 2.56e13,      # charm quark
-        'T': 2.68e13,      # tau
-        'b': 9.07e12,      # bottom quark
-        't': 0.24e12,      # top quark
-        'g': 1.1e14,       # gluon
-        'e': 9.42e16,      # electron
-        'w': 7.97e11,      # W boson
-        'z': 7.01e11,      # Z boson
-        'h': 2.25e11       # Higgs boson
+        'mu': 4.53e14, 'd': 1.6e14, 's': 9.6e13, 'c': 2.56e13,
+        'T': 2.68e13, 'b': 9.07e12, 't': 0.24e12, 'g': 1.1e14,
+        'e': 9.42e16, 'w': 7.97e11, 'z': 7.01e11, 'h': 2.25e11
     }
     
     base = 1.569
@@ -45,10 +35,12 @@ def f(M):
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
 
-def lognormal_mass_function(M, mu, sigma, rho_DM):
-    """Lognormal PBH mass function"""
-    psi = (rho_DM / (np.sqrt(2 * np.pi) * sigma * M)) * \
-          np.exp(-(np.log(M/mu))**2 / (2 * sigma**2))
+def critical_collapse_mass_function(M, Mp):
+    """Critical collapse PBH mass function"""
+    nu = 0.36  # critical exponent for radiation fluid
+    psi = (1 / (nu * Mp * gamma(nu + 1))) * \
+          (M/Mp)**(1/nu) * \
+          np.exp(-(M/Mp)**(1/nu))
     return psi
 
 def calculate_mass_at_time(M0, t):
@@ -56,27 +48,15 @@ def calculate_mass_at_time(M0, t):
     mass_cubed = (-16.02e25 * 1.0 * t + M0**3)
     return np.cbrt(np.maximum(mass_cubed, 0))
 
-# Generate mass points following lognormal distribution
-def generate_masses_from_distribution(n_points, mu, sigma):
-    # Create mass range for sampling
-    M = np.logspace(12, 16, 10000)
-    
-    # Calculate probability distribution
-    prob = lognormal_mass_function(M, mu, sigma, rho_DM)
-    prob = prob / np.sum(prob)  # Normalize
-    
-    # Generate random masses following the distribution
-    return np.random.choice(M, size=n_points, p=prob)
+# Generate initial masses using critical collapse distribution
+n_pbhs = 10000  # increased number for better statistics
+Mp = 5e14  # peak mass for critical collapse
+mass_range = np.logspace(12, 16, 1000)
+probabilities = critical_collapse_mass_function(mass_range, Mp)
+probabilities = probabilities / np.sum(probabilities)  # normalize
+initial_masses = np.random.choice(mass_range, size=n_pbhs, p=probabilities)
 
-# Setup parameters
-n_pbhs = 1000  # number of PBHs to simulate
-mu = 1e15      # location parameter
-sigma = 2      # width parameter
-
-# Generate initial masses using lognormal distribution
-initial_masses = generate_masses_from_distribution(n_pbhs, mu, sigma)
-
-# Set up the figure
+# Set up the figure and histogram
 fig, ax = plt.subplots(figsize=(10, 6))
 ax.set_xscale('log')
 ax.set_yscale('log')
@@ -99,14 +79,15 @@ def update(frame):
     
     if len(current_masses) > 0:
         # Create histogram
-        ax.hist(current_masses, bins=np.logspace(9, 16, 50), 
-                alpha=0.6, density=True)
+        hist, bins, _ = ax.hist(current_masses, bins=np.logspace(9, 16, 50), 
+                               alpha=0.6, density=True)
         
-        # Plot the theoretical distribution scaled to match histogram
-        M_plot = np.logspace(9, 16, 1000)
-        current_dist = lognormal_mass_function(M_plot, mu, sigma, rho_DM)
-        ax.plot(M_plot, current_dist/np.max(current_dist), 'r-', 
-                label='Initial Distribution (scaled)')
+        # Also plot the theoretical distribution at t=0 for comparison
+        if frame == 0:
+            theoretical = critical_collapse_mass_function(bins[:-1], Mp)
+            theoretical = theoretical / np.max(theoretical) * np.max(hist)
+            ax.plot(bins[:-1], theoretical, 'r-', label='Theoretical Initial')
+            ax.legend()
         
         # Set scales and labels
         ax.set_xscale('log')
@@ -115,7 +96,6 @@ def update(frame):
         ax.set_ylabel('Number of PBHs (normalized)')
         ax.set_title(f'PBH Mass Distribution at {times[frame]/age_of_universe:.2%} of Universe Age')
         ax.grid(True, which="both", ls="-", alpha=0.2)
-        ax.legend()
         
         # Set consistent axis limits
         ax.set_xlim(1e9, 1e16)
