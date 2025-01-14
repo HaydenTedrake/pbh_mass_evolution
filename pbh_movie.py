@@ -35,12 +35,10 @@ def f(M):
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
 
-def critical_collapse_mass_function(M, Mp):
-    """Critical collapse PBH mass function"""
-    nu = 0.36  # critical exponent for radiation fluid
-    psi = (1 / (nu * Mp * gamma(nu + 1))) * \
-          (M/Mp)**(1/nu) * \
-          np.exp(-(M/Mp)**(1/nu))
+def lognormal_mass_function(M, mu, sigma, rho_DM):
+    """Lognormal PBH mass function"""
+    psi = (rho_DM / (np.sqrt(2 * np.pi) * sigma * M)) * \
+          np.exp(-(np.log(M/mu))**2 / (2 * sigma**2))
     return psi
 
 def calculate_mass_at_time(M0, t):
@@ -48,13 +46,14 @@ def calculate_mass_at_time(M0, t):
     mass_cubed = (-16.02e25 * 1.0 * t + M0**3)
     return np.cbrt(np.maximum(mass_cubed, 0))
 
-# Generate initial masses using critical collapse distribution
-n_pbhs = 10000  # increased number for better statistics
-Mp = 5e14  # peak mass for critical collapse
-mass_range = np.logspace(12, 16, 1000)
-probabilities = critical_collapse_mass_function(mass_range, Mp)
-probabilities = probabilities / np.sum(probabilities)  # normalize
-initial_masses = np.random.choice(mass_range, size=n_pbhs, p=probabilities)
+# Set up initial distribution parameters
+n_pbhs = 10000  # number of PBHs to simulate
+mu = 5e14  # location parameter
+sigma = 0.1  # width parameter
+rho_DM = 0.403  # GeV/cm^3
+
+# Generate initial masses from lognormal distribution
+initial_masses = np.random.lognormal(mean=np.log(mu), sigma=sigma, size=n_pbhs)
 
 # Set up the figure and histogram
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -82,9 +81,9 @@ def update(frame):
         hist, bins, _ = ax.hist(current_masses, bins=np.logspace(9, 16, 50), 
                                alpha=0.6, density=True)
         
-        # Also plot the theoretical distribution at t=0 for comparison
+        # Plot theoretical distribution at t=0 for comparison
         if frame == 0:
-            theoretical = critical_collapse_mass_function(bins[:-1], Mp)
+            theoretical = lognormal_mass_function(bins[:-1], mu, sigma, rho_DM)
             theoretical = theoretical / np.max(theoretical) * np.max(hist)
             ax.plot(bins[:-1], theoretical, 'r-', label='Theoretical Initial')
             ax.legend()
