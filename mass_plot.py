@@ -74,7 +74,7 @@ def f(M):
         'c': 2.56e13,       # charm quark
         'T': 2.68e13,       # tau
         'b': 9.07e12,       # bottom quark
-        't': 0.48e12,        # top quark (unobserved at time of paper)
+        't': 0.24e12,        # top quark (unobserved at time of paper)
         'g': 1.1e14,         # gluon (effective mass)
         'e': 9.42e16,         # electron
         'w': 7.97e11,         # W boson
