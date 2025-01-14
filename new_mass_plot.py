@@ -75,7 +75,11 @@ def f(M):
         'T': 2.68e13,       # tau
         'b': 9.07e12,       # bottom quark
         't': 0.48e12,        # top quark (unobserved at time of paper)
-        'g': 1.1e14         # gluon (effective mass)
+        'g': 1.1e14,         # gluon (effective mass)
+        'e': 9.42e16,         # electron
+        'w': 7.97e11,         # W boson
+        'z': 7.01e11,         # Z boson
+        'h': 2.25e11          # Higgs boson
     }
     
     # Base constant from the original equation
@@ -90,7 +94,11 @@ def f(M):
         np.exp(-M / (beta_masses['T'])) +
         3 * np.exp(-M / (beta_masses['b'])) +
         3 * np.exp(-M / (beta_masses['t'])) +
-        0.963 * np.exp(-M / (beta_masses['g']))
+        0.963 * np.exp(-M / (beta_masses['g'])) +
+        np.exp(-M / (beta_masses['e'])) +
+        np.exp(-M / (beta_masses['w'])) +
+        np.exp(-M / (beta_masses['z'])) +
+        np.exp(-M / (beta_masses['h']))
     )
     
     return result
