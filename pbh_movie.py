@@ -1,103 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
-from matplotlib.animation import FuncAnimation, PillowWriter
 
+# Define the lognormal mass function as given
 def lognormal_mass_function(M, mu, sigma):
-    """Lognormal PBH mass function"""
-    psi = (1 / (np.sqrt(2 * np.pi) * sigma * M)) * \
-          np.exp(-(np.log(M / mu)) ** 2 / (2 * sigma ** 2))
-    return psi
+    """
+    Lognormal PBH mass function:
+    psi(M) = (1 / (sqrt(2*pi) * sigma * M)) 
+             * exp(-(ln(M/mu))^2 / (2*sigma^2))
+    """
+    return (1.0 / (np.sqrt(2.0 * np.pi) * sigma * M)) * \
+           np.exp(- (np.log(M / mu))**2 / (2.0 * sigma**2))
 
-def sample_lognormal_masses(mu, sigma, n_samples):
-    """Sample masses from the lognormal distribution"""
-    log_mu = np.log(mu)
-    masses = np.random.lognormal(mean=log_mu, sigma=sigma, size=n_samples)
-    return masses
+# Parameters
+mu = 10.0     # Example value for mu
+sigma = 1.0   # Example value for sigma
+n_samples = 10_000
 
+# Monte Carlo sampling using NumPy’s lognormal:
+#   M ~ LogNormal(mean=log(mu), sigma=sigma)
+samples = np.random.lognormal(mean=np.log(mu), sigma=sigma, size=n_samples)
 
-def f(M):
-    """Calculate f(M) with M in grams."""
-    beta_masses = {
-        'mu': 4.53e14, 'd': 1.6e14, 's': 9.6e13, 'c': 2.56e13, 'T': 2.68e13,
-        'b': 9.07e12, 't': 0.24e12, 'g': 1.1e14, 'e': 9.42e16, 'w': 7.97e11,
-        'z': 7.01e11, 'h': 2.25e11
-    }
-    base = 1.569
-    result = base + 0.569 * (
-        np.exp(-M / beta_masses['mu']) + 3 * np.exp(-M / beta_masses['d']) +
-        3 * np.exp(-M / beta_masses['s']) + 3 * np.exp(-M / beta_masses['c']) +
-        np.exp(-M / beta_masses['T']) + 3 * np.exp(-M / beta_masses['b']) +
-        3 * np.exp(-M / beta_masses['t']) + 0.963 * np.exp(-M / beta_masses['g']) +
-        np.exp(-M / beta_masses['e']) + np.exp(-M / beta_masses['w']) +
-        np.exp(-M / beta_masses['z']) + np.exp(-M / beta_masses['h'])
-    )
-    return result
+# --- (Optional) Compare histogram to the theoretical PDF ---
 
-def Mdot(M):
-    """Mass evolution equation dM/dt."""
-    return -5.34e25 * f(M) / (M * M)
+# 1) Create bins and histogram from the samples
+num_bins = 50
+counts, bin_edges = np.histogram(samples, bins=num_bins, density=True)
+bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
 
-def evolve_mass(M0, t_end):
-    """Solve the mass evolution equation for a given initial mass M0 up to time t_end."""
-    def dMdt(t, M):
-        return Mdot(M[0])
+# 2) Evaluate the lognormal_mass_function at bin centers
+pdf_values = lognormal_mass_function(bin_centers, mu, sigma)
 
-    solution = solve_ivp(
-        dMdt,
-        t_span=(0, t_end),
-        y0=[M0],
-        method='RK45',
-        rtol=1e-5,
-        atol=1e-5
-    )
-    return solution.t, solution.y[0]
+# 3) Plot
+plt.figure(figsize=(8, 5))
 
-mu = 1e15  # Characteristic mass in grams
-sigma = 0.5
-num_samples = 1000
-initial_masses = sample_lognormal_masses(mu, sigma, num_samples)
+# Histogram of the Monte Carlo samples
+plt.bar(bin_centers, counts, width=(bin_edges[1] - bin_edges[0]),
+        alpha=0.6, label='Monte Carlo Samples')
 
+# Theoretical PDF
+plt.plot(bin_centers, pdf_values, 'r-', lw=2, label='Theoretical PDF')
 
-fig, ax = plt.subplots(figsize=(10, 6))
-bins = np.logspace(10, 18, 50)  # Logarithmic bins for mass distribution
-ax.set_xscale('log')
-ax.set_xlim(1e10, 1e18)
-ax.set_ylim(0, 80)
-ax.set_xlabel("Mass (grams)")
-ax.set_ylabel("Frequency")
-ax.set_title("Evolution of PBH Mass Distribution")
-
-hist_data = ax.hist(initial_masses, bins=bins, alpha=0.5, label="PBH Mass Distribution")[0]
-line, = ax.plot([], [], color='r', label="Current Time Step")
-ax.legend()
-
-time_points = np.logspace(10, 17.64, 100)  # Up to 4.35e17 seconds (age of the universe)
-
-def update(frame):
-    """Update function for animation."""
-    t_end = time_points[frame]
-    evolved_masses = []
-    for M0 in initial_masses:
-        _, M_evolved = evolve_mass(M0, t_end)
-        evolved_masses.append(M_evolved[-1])
-    evolved_masses = np.array(evolved_masses)
-    
-    ax.clear()
-    ax.hist(evolved_masses, bins=bins, alpha=0.5, label="PBH Mass Distribution")
-    ax.set_xscale('log')
-    ax.set_xlim(1e10, 1e18)
-    ax.set_ylim(0, 80)
-    ax.set_xlabel("Mass (grams)")
-    ax.set_ylabel("Frequency")
-    ax.set_title(f"PBH Mass Distribution at t = {t_end:.2e} seconds")
-    ax.legend()
-
-# Create the animation
-anim = FuncAnimation(fig, update, frames=len(time_points), interval=100)
-
-# # Save the animation as a GIF
-# writer = PillowWriter(fps=10)
-# anim.save("pbh_mass_evolution.gif", writer=writer)
-
+plt.xlabel('M')
+plt.ylabel('Probability Density')
+plt.title(f'Lognormal Distribution (mu={mu}, sigma={sigma})')
+plt.legend()
+plt.grid(True)
 plt.show()
