@@ -1,48 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Define the lognormal mass function as given
-def lognormal_mass_function(M, mu, sigma):
-    """
-    Lognormal PBH mass function:
-    psi(M) = (1 / (sqrt(2*pi) * sigma * M)) 
-             * exp(-(ln(M/mu))^2 / (2*sigma^2))
-    """
-    return (1.0 / (np.sqrt(2.0 * np.pi) * sigma * M)) * \
-           np.exp(- (np.log(M / mu))**2 / (2.0 * sigma**2))
+# Parameters for the lognormal distribution
+mu = 10**15  # Mean mass in grams
+sigma = 2  # Standard deviation in log space
 
-# Parameters
-mu = 10.0     # Example value for mu
-sigma = 1.0   # Example value for sigma
-n_samples = 10_000
+# Generate masses over a logarithmic range
+log_mass = np.linspace(12, 19, 1000)  # log10(mass) range from 10^12 g to 10^19 g
+mass = 10**log_mass  # Convert to linear scale
 
-# Monte Carlo sampling using NumPy’s lognormal:
-#   M ~ LogNormal(mean=log(mu), sigma=sigma)
-samples = np.random.lognormal(mean=np.log(mu), sigma=sigma, size=n_samples)
+# Lognormal probability density function (PDF)
+pdf = (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
 
-# --- (Optional) Compare histogram to the theoretical PDF ---
-
-# 1) Create bins and histogram from the samples
-num_bins = 50
-counts, bin_edges = np.histogram(samples, bins=num_bins, density=True)
-bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-
-# 2) Evaluate the lognormal_mass_function at bin centers
-pdf_values = lognormal_mass_function(bin_centers, mu, sigma)
-
-# 3) Plot
-plt.figure(figsize=(8, 5))
-
-# Histogram of the Monte Carlo samples
-plt.bar(bin_centers, counts, width=(bin_edges[1] - bin_edges[0]),
-        alpha=0.6, label='Monte Carlo Samples')
-
-# Theoretical PDF
-plt.plot(bin_centers, pdf_values, 'r-', lw=2, label='Theoretical PDF')
-
-plt.xlabel('M')
-plt.ylabel('Probability Density')
-plt.title(f'Lognormal Distribution (mu={mu}, sigma={sigma})')
-plt.legend()
+# Plotting the initial mass distribution
+plt.figure(figsize=(10, 6))
+plt.plot(log_mass, pdf, color='salmon')
+plt.fill_between(log_mass, pdf, color='salmon', alpha=0.5)
+plt.title("Initial Mass Distribution")
+plt.xlabel("log10(Mass) [g]")
+plt.ylabel("Probability Density")
 plt.grid(True)
 plt.show()
