@@ -2,37 +2,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def f(M):
-    # Translate black hole masses into GeV
-    # Masses in GeV from Table I
-    masses = {
-        'mu': 0.106,     # muon
-        'd': 0.34,       # down quark2
-        's': 0.5,        # strange quark
-        'c': 1.87,       # charm quark
-        'T': 1.78,       # tau
-        'b': 5.28,       # bottom quark
-        't': 100,        # top quark (unobserved at time of paper)
-        'g': 0.6         # gluon (effective mass)
+    """
+    Calculate f(M) with M in grams
+    M_grams: black hole mass in grams
+    """
+    # in grams from Table I
+    beta_masses = {
+        'mu': 4.53e14,     # muon
+        'd': 1.6e14,       # down quark
+        's': 9.6e13,        # strange quark
+        'c': 2.56e13,       # charm quark
+        'T': 2.68e13,       # tau
+        'b': 9.07e12,       # bottom quark
+        't': 0.24e12,        # top quark (unobserved at time of paper)
+        'g': 1.1e14,         # gluon (effective mass)
+        'e': 9.42e16,         # electron
+        'w': 7.97e11,         # W boson
+        'z': 7.01e11,         # Z boson
+        'h': 2.25e11          # Higgs boson
     }
-    
-    # Beta values (assuming s=1/2 and s=1 as mentioned)
-    beta_half = 4.53
-    beta_one = 6.04
     
     # Base constant from the original equation
     base = 1.569
     
     # Detailed calculation following the exact equation
     result = base + 0.569 * (
-        np.exp(-M / (beta_half * masses['mu'])) +
-        3 * np.exp(-M / (beta_half * masses['d'])) +
-        3 * np.exp(-M / (beta_half * masses['s'])) +
-        3 * np.exp(-M / (beta_half * masses['c'])) +
-        np.exp(-M / (beta_half * masses['T'])) +
-        3 * np.exp(-M / (beta_half * masses['b'])) +
-        3 * np.exp(-M / (beta_half * masses['t'])) +
-        0.963 * np.exp(-M / (beta_one * masses['g']))
+        np.exp(-M / (beta_masses['mu'])) +
+        3 * np.exp(-M / (beta_masses['d'])) +
+        3 * np.exp(-M / (beta_masses['s'])) +
+        3 * np.exp(-M / (beta_masses['c'])) +
+        np.exp(-M / (beta_masses['T'])) +
+        3 * np.exp(-M / (beta_masses['b'])) +
+        3 * np.exp(-M / (beta_masses['t'])) +
+        0.963 * np.exp(-M / (beta_masses['g'])) +
+        np.exp(-M / (beta_masses['e'])) +
+        np.exp(-M / (beta_masses['w'])) +
+        np.exp(-M / (beta_masses['z'])) +
+        np.exp(-M / (beta_masses['h']))
     )
+    
     return result
 
 # Define a range for M in logarithmic space
