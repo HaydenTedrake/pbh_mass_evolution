@@ -3,7 +3,19 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-# Step 1: Define the functions
+def lognormal_mass_function(M, mu, sigma):
+    """Lognormal PBH mass function"""
+    psi = (1 / (np.sqrt(2 * np.pi) * sigma * M)) * \
+          np.exp(-(np.log(M / mu)) ** 2 / (2 * sigma ** 2))
+    return psi
+
+def sample_lognormal_masses(mu, sigma, n_samples):
+    """Sample masses from the lognormal distribution"""
+    log_mu = np.log(mu)
+    masses = np.random.lognormal(mean=log_mu, sigma=sigma, size=n_samples)
+    return masses
+
+
 def f(M):
     """Calculate f(M) with M in grams."""
     beta_masses = {
@@ -41,13 +53,12 @@ def evolve_mass(M0, t_end):
     )
     return solution.t, solution.y[0]
 
-# Step 2: Sample initial masses
 mu = 1e15  # Characteristic mass in grams
 sigma = 0.5
 num_samples = 1000
-initial_masses = np.random.lognormal(mean=np.log(mu), sigma=sigma, size=num_samples)
+initial_masses = sample_lognormal_masses(mu, sigma, num_samples)
 
-# Step 3: Set up the animation
+
 fig, ax = plt.subplots(figsize=(10, 6))
 bins = np.logspace(10, 18, 50)  # Logarithmic bins for mass distribution
 ax.set_xscale('log')
@@ -61,7 +72,6 @@ hist_data = ax.hist(initial_masses, bins=bins, alpha=0.5, label="PBH Mass Distri
 line, = ax.plot([], [], color='r', label="Current Time Step")
 ax.legend()
 
-# Time points for animation (logarithmic spacing for faster early evolution)
 time_points = np.logspace(10, 17.64, 100)  # Up to 4.35e17 seconds (age of the universe)
 
 def update(frame):
