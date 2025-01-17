@@ -1,48 +1,40 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Parameters
+N = 10000  # Number of samples
+sigma = 2  # Standard deviation
+mu = 10**15  # Mean of the lognormal distribution
+
+# Define the lognormal PDF
 def pdf(mass, mu, sigma):
-    # Lognormal probability density function (PDF)
-    pdf = (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
-    return pdf
+    return (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
 
-def run_pdf(Mdict, N):
-    rng = np.random.default_rng()
-    
-    # Create a range of masses to sample from
-    masses = np.logspace(11, 19, 10000)
-    
-    # Calculate PDF values
-    pdf_values = pdf(masses, Mdict['mean'], Mdict['sigma'])
-    
-    # Normalize PDF to make it a proper probability distribution
-    pdf_normalized = pdf_values / np.sum(pdf_values)
-    
-    # Sample from the distribution
-    sampled_indices = rng.choice(len(masses), size=N, p=pdf_normalized)
-    sampled_masses = masses[sampled_indices]
-    
-    return sampled_masses
+# Generate mass range
+masses = np.logspace(11, 19, 10000)  # Masses from 10^11 to 10^19
 
-# Set up parameters
-Mdict = {
-    'type': 'normal',
-    'mean': 1e15,
-    'sigma': 2.0
-}
+# Compute PDF values
+pdf_values = pdf(masses, mu, sigma)
 
-N = 10000
+# Normalize PDF
+pdf_normalized = pdf_values / np.sum(pdf_values)
 
-# Sample masses
-sampled_masses = run_pdf(Mdict, N)
+# Compute the CDF
+cdf_values = np.cumsum(pdf_normalized)
 
-# Create histogram of sampled masses
+# Ensure the CDF is normalized
+cdf_values /= cdf_values[-1]
+
+# Inverse transform sampling
+random_values = np.random.rand(N)
+sampled_masses = np.interp(random_values, cdf_values, masses)
+
+# Create a histogram of the sampled masses
 plt.figure(figsize=(10, 6))
-plt.hist(np.log10(sampled_masses), bins=100, density=True)
+plt.hist(np.log10(sampled_masses), bins=100, color="skyblue", edgecolor="black")
 plt.xlabel('log10(mass) [g]')
-plt.ylabel('Number')
+plt.ylabel('Density')
 plt.xlim(11, 19)
-plt.ylim(0, 1)
 plt.grid(True, alpha=0.3)
 plt.title('Mass Distribution')
 plt.show()
