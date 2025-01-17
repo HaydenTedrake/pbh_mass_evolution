@@ -8,29 +8,41 @@ def pdf(mass, mu, sigma):
 
 def run_pdf(Mdict, N):
     rng = np.random.default_rng()
-    if Mdict['type'] == 'normal':
-        masses = rng.normal(Mdict['mean'],Mdict['sigma'],N)
-        values = pdf(masses, Mdict['mean'], Mdict['sigma'])
-    return masses, values
+    
+    # Create a range of masses to sample from
+    masses = np.logspace(11, 19, 10000)
+    
+    # Calculate PDF values
+    pdf_values = pdf(masses, Mdict['mean'], Mdict['sigma'])
+    
+    # Normalize PDF to make it a proper probability distribution
+    pdf_normalized = pdf_values / np.sum(pdf_values)
+    
+    # Sample from the distribution
+    sampled_indices = rng.choice(len(masses), size=N, p=pdf_normalized)
+    sampled_masses = masses[sampled_indices]
+    
+    return sampled_masses
 
-Mdict = {}
-Mdict['type'] = 'normal'
-Mdict['mean'] = 10**15
-Mdict['sigma'] = 2
+# Set up parameters
+Mdict = {
+    'type': 'normal',
+    'mean': 1e15,
+    'sigma': 2.0
+}
 
-N = 100000
+N = 10000
 
-# Get both masses and their PDF values
-masses, pdf_values = run_pdf(Mdict, N)
+# Sample masses
+sampled_masses = run_pdf(Mdict, N)
 
-# Create plot
+# Create histogram of sampled masses
 plt.figure(figsize=(10, 6))
-plt.plot(masses, pdf_values)
-plt.xscale('log')
-plt.xlim(10**11, 10**19)
-plt.ylim(0, 220)
-
-plt.xlabel('Mass [g]')
-plt.ylabel('PDF Value')
+plt.hist(np.log10(sampled_masses), bins=100, density=True)
+plt.xlabel('log10(mass) [g]')
+plt.ylabel('Number')
+plt.xlim(11, 19)
+plt.ylim(0, 1)
+plt.grid(True, alpha=0.3)
 plt.title('Mass Distribution')
 plt.show()
