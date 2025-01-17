@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 def pdf(mass, mu, sigma):
     # Lognormal probability density function (PDF)
     pdf = (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
+    # pdf = mass**2
     return pdf
 
 # # Plotting the initial mass distribution
@@ -23,23 +24,26 @@ def run_pdf(Mdict, N):
     value = pdf(M, Mdict['mean'], Mdict['sigma'])
     return value
 
-def calc_ptarget(value, value_target):
-    Ntarget = np.count_nonzero(np.logical_and(value >= value_target[0], value <= value_target[1]))
-    Ptarget = Ntarget / len(value)
-    return Ptarget
 
 Mdict = {}
 Mdict['type'] = 'normal'
 Mdict['mean'] = 10**15
 Mdict['sigma'] = 2
 
-N = 10000
+N = 100000
 
 value = run_pdf(Mdict, N)
 
-value_target = (10**10,10**12)
-Ptarget = calc_ptarget(value, value_target)
+# plt.figure()
+# plt.hist(value, 200)
+# plt.show()
 
-plt.figure()
-plt.hist(value, 200)
+# Create histogram
+plt.figure(figsize=(10, 6))
+plt.hist(value, bins=np.logspace(11, 19, 100), density=True)
+plt.xscale('log')
+plt.xlim(10**11, 10**19)
+plt.ylim(0, 220)
+
+plt.title('Mass Distribution')
 plt.show()
