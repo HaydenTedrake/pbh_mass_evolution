@@ -95,38 +95,23 @@ def evolve(masses):
     def dMdt(t, M):
         return Mdot(M[0])
     
-    def event_mass_threshold(t, M):
-        return M[0] - target_mass
-    
-    event_mass_threshold.terminal = True  # Stop integration when event occurs
-    event_mass_threshold.direction = -1   # Only trigger when crossing from above
-
     # Set up solver parameters
     rtol = 1e-5
     atol = 1e-5
     
-    explosion_time = np.inf
-
     # Use solve_ivp with adaptive step size
     solution = solve_ivp(
         dMdt,
-        t_span=(0, explosion_time),
-        y0=[M0],
+        t_span=(0, age_of_universe),
+        y0=masses,
         method='RK45',
         rtol=rtol,
         atol=atol,
         #max_step=dt if dt is not None else np.inf,
         #first_step=100000,  # this was a simple test from Russ (don't trust it!)
-        events=event_mass_threshold,
         dense_output=True
     )
 
-    explosion_time = solution.t[-1]
-    explosion_mass = solution.y[0][-1]
-
-    print(f"Explosion time: {explosion_time} s")
-    # print(f"Explosion mass: {explosion_mass} g")
-    
     return solution.y[0], solution.t
 
 # Evolve the masses and save states
@@ -146,7 +131,7 @@ def animate(frame):
     ax.set_ylabel('Count')
     ax.set_xlim(11, 19)
     ax.grid(True, alpha=0.3)
-    ax.set_title(f'PBH Masses Evolved (Time = {times[frame]:.2f} seconds')
+    ax.set_title(f'PBH Masses Evolved (Time = {times[frame]:.2f} seconds)')
     ax.hist(
         np.log10(mass_history[frame]),
         bins=100,
