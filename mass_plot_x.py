@@ -152,7 +152,7 @@ def solve_Mdot(M0, target_mass=1e9):
     explosion_mass = solution.y[0][-1]
 
     print(f"Explosion time: {explosion_time} s")
-    print(f"Explosion mass: {explosion_mass} g")
+    # print(f"Explosion mass: {explosion_mass} g")
 
     M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
     M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
@@ -186,7 +186,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
     # print("finished solve_Mdot")
 
     rough_estimate = (M0**3 - target_mass**3) / (16.02e25 * 1.0)
-    print(f"Rough estimate: {rough_estimate} s")
+    # print(f"Rough estimate: {rough_estimate} s")
     if explosion_time is None:
         print("Could not determine explosion time. Using fallback calculation.")
         explosion_time = rough_estimate
@@ -243,6 +243,11 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
     
     return times_numerical_shifted, masses_numerical, mass_at_negative_boundary_time
 
-# Example usage with custom target mass
-times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x=0, M0=4e14, x=22000000, target_mass=1e9)
-print(f"M at target x: {M_at_negative_boundary} g")
+# Parameters
+explosion_x = 0
+M0 = 4e14
+x = 22000000
+target_mass = 1e9
+
+times_shifted, masses, M_at_negative_boundary = PBHDemo(explosion_x, M0, x, target_mass)
+print(f"If a PBH explodes at x=0, a PBH with M0 {M0} g will have a mass of {M_at_negative_boundary} g at {x} meters")
