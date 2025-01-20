@@ -162,7 +162,7 @@ def animate(frame):
 ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
 
 writer = PillowWriter(fps=15)
-anim.save("black_hole_evolution.gif", writer=writer)
+ani.save("black_hole_evolution.gif", writer=writer)
 
 print("Animation saved successfully!")
 plt.close()
