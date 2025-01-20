@@ -92,6 +92,9 @@ def Mdot(M):
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
 def evolve(masses, n_time_points=10):
+    """
+    Evolve an array of black hole masses over time.
+    """
     times = np.geomspace(1, age_of_universe, n_time_points)
     mass_history = np.zeros((len(masses), n_time_points))
     
@@ -136,14 +139,22 @@ y_max = np.max(hist_initial) * 1.1  # Add 10% margin
 
 def animate(frame):
     ax.clear()
+    
+    # Plot initial distribution in red with transparency
+    ax.hist(np.log10(initial_masses[initial_masses > 1e9]), 
+            bins=50, color="red", alpha=0.3, edgecolor="darkred", label="Initial Distribution")
+    
+    # Plot current distribution in blue
     masses_at_time = mass_history[:, frame]
     ax.hist(np.log10(masses_at_time[masses_at_time > 1e9]), 
-            bins=50, color="skyblue", edgecolor="black")
+            bins=50, color="skyblue", alpha=0.7, edgecolor="black", label="Current Distribution")
+    
     ax.set_xlabel('log10(mass) [g]')
     ax.set_ylabel('Count')
     ax.set_xlim(11, 19)
-    ax.set_ylim(0, y_max)  # Set fixed y-axis limits
+    ax.set_ylim(0, y_max)
     ax.grid(True, alpha=0.3)
+    ax.legend()
     ax.set_title(f'Mass Distribution (Time: {times[frame]:.2e} seconds)')
 
 # Create the animation
