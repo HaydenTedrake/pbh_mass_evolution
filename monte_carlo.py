@@ -7,7 +7,7 @@ from scipy.integrate import solve_ivp
 age_of_universe = 4.35e17  # in seconds
 
 # Parameters
-N = 10000  # Number of samples
+N = 100  # Number of samples
 sigma = 2  # Standard deviation
 mu = 10**15  # Mean of the lognormal distribution
 
@@ -95,7 +95,6 @@ def evolve(masses, n_time_points=10):
     # Create logarithmically spaced time points
     times = np.geomspace(1, age_of_universe, n_time_points)
     mass_history = np.zeros((len(masses), n_time_points))
-    print('hi1')
     
     for i, initial_mass in enumerate(masses):
         def dMdt(t, M):
@@ -123,7 +122,7 @@ def evolve(masses, n_time_points=10):
         # If the evolution terminated early (black hole evaporated),
         # fill the rest with zeros or very small mass
         if len(solution.t) < n_time_points:
-            mass_history[i, len(solution.t):] = 1e9
+            mass_history[i, len(solution.t):] = 0
             
     return mass_history, times
 
