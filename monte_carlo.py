@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.animation import PillowWriter
 import math
 from scipy.integrate import solve_ivp
 
@@ -162,3 +163,6 @@ ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
 
 writer = PillowWriter(fps=15)
 anim.save("black_hole_evolution.gif", writer=writer)
+
+print("Animation saved successfully!")
+plt.close()
