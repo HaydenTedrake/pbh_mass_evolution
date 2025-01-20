@@ -159,8 +159,6 @@ def animate(frame):
 
 # Create the animation
 ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
-plt.show()
 
-# Optional: Save animation
-ani.save("black_hole_evolution.mp4", writer="ffmpeg", fps=10)
-print('done')
+writer = PillowWriter(fps=15)
+anim.save("black_hole_evolution.gif", writer=writer)
