@@ -92,45 +92,47 @@ def Mdot(M):
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
 def evolve(masses, n_time_points=10):
-    # Create logarithmically spaced time points
     times = np.geomspace(1, age_of_universe, n_time_points)
     mass_history = np.zeros((len(masses), n_time_points))
     
     for i, initial_mass in enumerate(masses):
         def dMdt(t, M):
-            return Mdot(M[0])  # M is passed as array, take first element
+            return Mdot(M[0])
         
         def event_mass_threshold(t, M):
             return M[0] - 1e9
         
         event_mass_threshold.terminal = True
         event_mass_threshold.direction = -1
-        # Solve for this mass
+        
         solution = solve_ivp(
             dMdt,
             t_span=(times[0], times[-1]),
-            y0=[initial_mass],  # Pass as single-element array
+            y0=[initial_mass],
             method='RK45',
-            t_eval=times,  # Evaluate at specific times
+            t_eval=times,
             events=event_mass_threshold,
             rtol=1e-6,
             atol=1e-6
         )
-        # Store the mass history for this black hole
+        
         mass_history[i, :len(solution.t)] = solution.y[0]
         
-        # If the evolution terminated early (black hole evaporated),
-        # fill the rest with zeros or very small mass
         if len(solution.t) < n_time_points:
-            mass_history[i, len(solution.t):] = 0
+            mass_history[i, len(solution.t):] = 1e9
             
     return mass_history, times
 
 # Evolve the masses
 mass_history, times = evolve(sampled_masses)
 
-# Create animation
+# Create figure
 fig, ax = plt.subplots(figsize=(10, 6))
+
+# Calculate initial distribution to set y-axis limits
+initial_masses = mass_history[:, 0]
+hist_initial, bins_initial = np.histogram(np.log10(initial_masses[initial_masses > 1e9]), bins=50)
+y_max = np.max(hist_initial) * 1.1  # Add 10% margin
 
 def animate(frame):
     ax.clear()
@@ -140,6 +142,7 @@ def animate(frame):
     ax.set_xlabel('log10(mass) [g]')
     ax.set_ylabel('Count')
     ax.set_xlim(11, 19)
+    ax.set_ylim(0, y_max)  # Set fixed y-axis limits
     ax.grid(True, alpha=0.3)
     ax.set_title(f'Mass Distribution (Time: {times[frame]:.2e} seconds)')
 
