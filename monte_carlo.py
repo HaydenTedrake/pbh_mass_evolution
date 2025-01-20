@@ -8,7 +8,7 @@ from scipy.integrate import solve_ivp
 age_of_universe = 4.35e17  # in seconds
 
 # Parameters
-N = 10000  # Number of samples
+N = 100  # Number of samples
 sigma = 2  # Standard deviation
 mu = 10**15  # Mean of the lognormal distribution
 
@@ -92,7 +92,7 @@ def Mdot(M):
 
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
-def evolve(masses, n_time_points=1000):
+def evolve(masses, n_time_points=10):
     """
     Evolve an array of black hole masses over time.
     """
@@ -161,8 +161,9 @@ def animate(frame):
 # Create the animation
 ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
 
-writer = PillowWriter(fps=15)
-ani.save("black_hole_evolution.gif", writer=writer)
+# writer = PillowWriter(fps=15)
+# ani.save("black_hole_evolution.gif", writer=writer)
 
-print("Animation saved successfully!")
-plt.close()
+# print("Animation saved successfully!")
+# plt.close()
+plt.show()
