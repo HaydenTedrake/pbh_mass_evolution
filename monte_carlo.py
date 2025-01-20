@@ -91,67 +91,62 @@ def Mdot(M):
 
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
-def evolve(masses):
-    mass_history = []
-    times = None
-
-    for M in masses:
+def evolve(masses, n_time_points=10):
+    # Create logarithmically spaced time points
+    times = np.geomspace(1, age_of_universe, n_time_points)
+    mass_history = np.zeros((len(masses), n_time_points))
+    print('hi1')
+    
+    for i, initial_mass in enumerate(masses):
         def dMdt(t, M):
-            return Mdot(M)
+            return Mdot(M[0])  # M is passed as array, take first element
         
         def event_mass_threshold(t, M):
-            return M - 1e9
+            return M[0] - 1e9
         
-        event_mass_threshold.terminal = True  # Stop integration when event occurs
-        event_mass_threshold.direction = -1   # Only trigger when crossing from above
-
-        # Set up solver parameters
-        rtol = 1e-5
-        atol = 1e-5
-        
-        explosion_time = np.inf
-        
-        # Use solve_ivp with adaptive step size
+        event_mass_threshold.terminal = True
+        event_mass_threshold.direction = -1
+        # Solve for this mass
         solution = solve_ivp(
             dMdt,
-            t_span=(0, age_of_universe),
-            y0=masses,
+            t_span=(times[0], times[-1]),
+            y0=[initial_mass],  # Pass as single-element array
             method='RK45',
-            rtol=rtol,
-            atol=atol,
-            #max_step=dt if dt is not None else np.inf,
-            #first_step=100000,  # this was a simple test from Russ (don't trust it!)
+            t_eval=times,  # Evaluate at specific times
             events=event_mass_threshold,
-            dense_output=True
+            rtol=1e-6,
+            atol=1e-6
         )
-        mass_history.append(solution.y[0])
+        # Store the mass history for this black hole
+        mass_history[i, :len(solution.t)] = solution.y[0]
+        
+        # If the evolution terminated early (black hole evaporated),
+        # fill the rest with zeros or very small mass
+        if len(solution.t) < n_time_points:
+            mass_history[i, len(solution.t):] = 1e9
+            
+    return mass_history, times
 
-        if times is None:
-            times = solution.t
-
-    return np.array(mass_history), times
-
-# Evolve the masses and save states
+# Evolve the masses
 mass_history, times = evolve(sampled_masses)
-print(mass_history)
-print(times)
-# Loop through each time step
-for i, time in enumerate(times):
-    # Get the masses at the current time step (i-th column of mass_history)
-    masses_at_time = mass_history[:, i]
-    # Create a histogram of the sampled masses
-    plt.figure(figsize=(10, 6))
-    plt.hist(np.log10(masses_at_time), bins=100, color="skyblue", edgecolor="black")
-    plt.xlabel('log10(mass) [g]')
-    plt.ylabel('Count')
-    plt.xlim(11, 19)
-    plt.grid(True, alpha=0.3)
-    plt.title('Mass Distribution (Time: {time} seconds)')
-    plt.show()
 
-# # Create the animation
-# ani = animation.FuncAnimation(fig, animate, frames=50, interval=200)
+# Create animation
+fig, ax = plt.subplots(figsize=(10, 6))
 
-# # # Save the animation as a video
-# # ani.save("mass_distribution_evolution.mp4", writer="ffmpeg", fps=10)
-# plt.show()
+def animate(frame):
+    ax.clear()
+    masses_at_time = mass_history[:, frame]
+    ax.hist(np.log10(masses_at_time[masses_at_time > 1e9]), 
+            bins=50, color="skyblue", edgecolor="black")
+    ax.set_xlabel('log10(mass) [g]')
+    ax.set_ylabel('Count')
+    ax.set_xlim(11, 19)
+    ax.grid(True, alpha=0.3)
+    ax.set_title(f'Mass Distribution (Time: {times[frame]:.2e} seconds)')
+
+# Create the animation
+ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
+plt.show()
+
+# Optional: Save animation
+# ani.save("black_hole_evolution.mp4", writer="ffmpeg", fps=10)
