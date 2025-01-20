@@ -92,40 +92,49 @@ def Mdot(M):
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
 def evolve(masses):
-    def dMdt(t, M):
-        return Mdot(M[0])
-    
-    def event_mass_threshold(t, M):
-        return M[0] - 1e9
-    
-    event_mass_threshold.terminal = True  # Stop integration when event occurs
-    event_mass_threshold.direction = -1   # Only trigger when crossing from above
+    mass_history = []
+    times = None
 
-    # Set up solver parameters
-    rtol = 1e-5
-    atol = 1e-5
-    
-    explosion_time = np.inf
-    
-    # Use solve_ivp with adaptive step size
-    solution = solve_ivp(
-        dMdt,
-        t_span=(0, age_of_universe),
-        y0=masses,
-        method='RK45',
-        rtol=rtol,
-        atol=atol,
-        #max_step=dt if dt is not None else np.inf,
-        #first_step=100000,  # this was a simple test from Russ (don't trust it!)
-        events=event_mass_threshold,
-        dense_output=True
-    )
+    for M in masses:
+        def dMdt(t, M):
+            return Mdot(M)
+        
+        def event_mass_threshold(t, M):
+            return M - 1e9
+        
+        event_mass_threshold.terminal = True  # Stop integration when event occurs
+        event_mass_threshold.direction = -1   # Only trigger when crossing from above
 
-    return solution.y[0], solution.t
+        # Set up solver parameters
+        rtol = 1e-5
+        atol = 1e-5
+        
+        explosion_time = np.inf
+        
+        # Use solve_ivp with adaptive step size
+        solution = solve_ivp(
+            dMdt,
+            t_span=(0, age_of_universe),
+            y0=masses,
+            method='RK45',
+            rtol=rtol,
+            atol=atol,
+            #max_step=dt if dt is not None else np.inf,
+            #first_step=100000,  # this was a simple test from Russ (don't trust it!)
+            events=event_mass_threshold,
+            dense_output=True
+        )
+        mass_history.append(solution.y[0])
+
+        if times is None:
+            times = solution.t
+
+    return np.array(mass_history), times
 
 # Evolve the masses and save states
 mass_history, times = evolve(sampled_masses)
 print(mass_history)
+print(times)
 # Loop through each time step
 for i, time in enumerate(times):
     # Get the masses at the current time step (i-th column of mass_history)
@@ -137,31 +146,8 @@ for i, time in enumerate(times):
     plt.ylabel('Count')
     plt.xlim(11, 19)
     plt.grid(True, alpha=0.3)
-    plt.title('Mass Distribution')
+    plt.title('Mass Distribution (Time: {time} seconds)')
     plt.show()
-
-# # Create the animation from saved states
-# fig, ax = plt.subplots(figsize=(10, 6))
-# ax.set_xlabel('log10(mass) [g]')
-# ax.set_ylabel('Count')
-# ax.set_xlim(11, 19)
-# ax.grid(True, alpha=0.3)
-
-# # Update function for animation
-# def animate(frame):
-#     ax.clear()  # Clear the current plot
-#     ax.set_xlabel('log10(mass) [g]')
-#     ax.set_ylabel('Count')
-#     ax.set_xlim(11, 19)
-#     ax.grid(True, alpha=0.3)
-#     ax.set_title(f'PBH Masses Evolved (Time = {times[frame]:.2f} seconds)')
-#     ax.hist(
-#         np.log10(mass_history[frame]),
-#         bins=100,
-#         color="skyblue",
-#         edgecolor="black",
-#         alpha=0.7
-#     )
 
 # # Create the animation
 # ani = animation.FuncAnimation(fig, animate, frames=50, interval=200)
