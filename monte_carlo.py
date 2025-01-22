@@ -78,8 +78,8 @@ def f(M):
         3 * np.exp(-M / (beta_masses['b'])) +
         3 * np.exp(-M / (beta_masses['t'])) +
         0.963 * np.exp(-M / (beta_masses['g'])) +
-        np.exp(-M / (beta_masses['w'])) +
-        np.exp(-M / (beta_masses['z'])) +
+        6 * np.exp(-M / (beta_masses['w'])) +
+        3 * np.exp(-M / (beta_masses['z'])) +
         np.exp(-M / (beta_masses['h']))
     )
     
