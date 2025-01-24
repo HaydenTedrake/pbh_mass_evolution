@@ -4,23 +4,40 @@ import matplotlib.animation as animation
 from matplotlib.animation import PillowWriter
 import math
 from scipy.integrate import solve_ivp
+from scipy.special import gamma
+
+mass_function_choice = 'critical_collapse' # Options: 'lognormal', 'critical_collapse'
 
 age_of_universe = 4.35e17  # in seconds
 
-# Parameters
-N = 100  # Number of samples
+N=100
+
+# Parameters for Lognormal
 sigma = 2  # Standard deviation
 mu = 10**15  # Mean of the lognormal distribution
 
+# Parameters for Critical Collapse
+Mp = 10**15  # Peak location for critical collapse
+nu = 0.35
+
 # Define the lognormal PDF
-def pdf(mass, mu, sigma):
+def lognormal_pdf(mass, mu, sigma):
     return (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
+
+def critical_collapse_pdf(mass, Mp):
+    return (1/(nu*gamma(1+nu))*((mass/Mp)**(1/nu))*np.exp(-((mass/Mp)**(1/nu))))
 
 # Generate mass range
 masses = np.logspace(11, 19, 10000)  # Masses from 10^11 to 10^19
 
 # Compute PDF values
-pdf_values = pdf(masses, mu, sigma)
+if mass_function_choice == 'lognormal':
+    pdf_values = lognormal_pdf(masses, mu, sigma)
+elif mass_function_choice == 'critical_collapse':
+    pdf_values = critical_collapse_pdf(masses, Mp)
+else:
+    raise ValueError("Invalid mass function choice. Choose 'lognormal' or 'critical_collapse'.")
+
 
 # Normalize PDF
 pdf_normalized = pdf_values / np.sum(pdf_values)
