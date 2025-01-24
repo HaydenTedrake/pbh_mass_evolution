@@ -25,7 +25,7 @@ def lognormal_pdf(mass, mu, sigma):
     return (1 / (mass * sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((np.log(mass / mu) / sigma) ** 2))
 
 def critical_collapse_pdf(mass, Mp):
-    return (1/(nu*gamma(1+nu))*((mass/Mp)**(1/nu))*np.exp(-((mass/Mp)**(1/nu))))
+    return (1/(nu*Mp*gamma(1+nu))*((mass/Mp)**(1/nu))*np.exp(-((mass/Mp)**(1/nu))))
 
 # Generate mass range
 masses = np.logspace(11, 19, 10000)  # Masses from 10^11 to 10^19
@@ -107,7 +107,7 @@ def Mdot(M):
 
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
-def evolve(masses, n_time_points=10):
+def evolve(masses, n_time_points=100):
     """
     Evolve an array of black hole masses over time.
     """
