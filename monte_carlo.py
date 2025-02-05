@@ -70,6 +70,7 @@ def f(M):
     # in grams from Table I
     beta_masses = {
         'mu': 4.53e14,     # muon
+        'u': 1.6e14,       # up quark
         'd': 1.6e14,       # down quark
         's': 9.6e13,        # strange quark
         'c': 2.56e13,       # charm quark
@@ -88,6 +89,7 @@ def f(M):
     # Detailed calculation following the exact equation
     result = base + 0.569 * (
         np.exp(-M / (beta_masses['mu'])) +
+        3 * np.exp(-M / (beta_masses['u']))
         3 * np.exp(-M / (beta_masses['d'])) +
         3 * np.exp(-M / (beta_masses['s'])) +
         3 * np.exp(-M / (beta_masses['c'])) +
