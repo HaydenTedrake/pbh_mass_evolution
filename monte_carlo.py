@@ -10,7 +10,7 @@ mass_function_choice = 'critical_collapse' # Options: 'lognormal', 'critical_col
 
 age_of_universe = 4.35e17  # in seconds
 
-N=100
+N=1000
 
 # Parameters for Lognormal
 sigma = 2  # Standard deviation
@@ -89,7 +89,7 @@ def f(M):
     # Detailed calculation following the exact equation
     result = base + 0.569 * (
         np.exp(-M / (beta_masses['mu'])) +
-        3 * np.exp(-M / (beta_masses['u']))
+        3 * np.exp(-M / (beta_masses['u'])) +
         3 * np.exp(-M / (beta_masses['d'])) +
         3 * np.exp(-M / (beta_masses['s'])) +
         3 * np.exp(-M / (beta_masses['c'])) +
@@ -109,7 +109,7 @@ def Mdot(M):
 
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
-def evolve(masses, n_time_points=100):
+def evolve(masses, n_time_points=1000):
     """
     Evolve an array of black hole masses over time.
     """
