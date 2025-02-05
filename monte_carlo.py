@@ -109,7 +109,7 @@ def Mdot(M):
 
 # I have the masses ass sampled_masses as a numpy array, now i need to evolve each one of them over the age of the universe
 
-def evolve(masses, n_time_points=1000):
+def evolve(masses, n_time_points=500):
     """
     Evolve an array of black hole masses over time.
     """
@@ -179,7 +179,7 @@ def animate(frame):
 ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
 
 # writer = PillowWriter(fps=15)
-# ani.save("black_hole_evolution.gif", writer=writer)
+# ani.save("lognormal.gif", writer=writer)
 
 # print("Animation saved successfully!")
 # plt.close()
