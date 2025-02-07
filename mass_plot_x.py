@@ -131,9 +131,6 @@ def solve_Mdot(M0, target_mass=1e9):
     event_mass_threshold.terminal = True  # Stop integration when event occurs
     event_mass_threshold.direction = -1   # Only trigger when crossing from above
 
-    # Set up solver parameters
-    rtol = 1e-5
-    atol = 1e-5
     
     explosion_time = np.inf
 
@@ -143,10 +140,8 @@ def solve_Mdot(M0, target_mass=1e9):
         t_span=(0, explosion_time),
         y0=[M0],
         method='RK45',
-        rtol=rtol,
-        atol=atol,
-        #max_step=dt if dt is not None else np.inf,
-        #first_step=100000,  # this was a simple test from Russ (don't trust it!)
+        rtol=1e-5,
+        atol=1e-5,
         events=event_mass_threshold,
         dense_output=True
     )
