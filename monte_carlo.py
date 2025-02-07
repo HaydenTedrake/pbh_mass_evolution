@@ -184,31 +184,3 @@ ani = animation.FuncAnimation(fig, animate, frames=len(times), interval=100)
 # print("Animation saved successfully!")
 # plt.close()
 plt.show()
-
-# Parameter for mass cutoff
-
-def calculate_number_density(mass_history, cutoff_M):
-    """
-    Calculate the number density of PBHs with mass below cutoff_M.
-    """
-    final_masses = mass_history[:, -1]  # Masses at the final time point
-    below_cutoff = final_masses[final_masses < cutoff_M]  # Filter masses below cutoff_M
-    number_density = len(below_cutoff) / len(final_masses)  # Normalize to total number of masses
-    return number_density
-
-# Calculate the number density for the given cutoff_M
-cutoff_M = 1e17
-number_density = calculate_number_density(mass_history, cutoff_M)
-print(f"Number density of PBHs with mass below {cutoff_M:.2e} g: {number_density:.4f}")
-
-# Optional: Plot distribution with cutoff
-plt.figure(figsize=(10, 6))
-final_masses = mass_history[:, -1]
-plt.hist(np.log10(final_masses[final_masses > 1e9]), bins=50, color="skyblue", edgecolor="black", alpha=0.7)
-plt.axvline(np.log10(cutoff_M), color="red", linestyle="--", label=f'cutoff_M = {cutoff_M:.2e} g')
-plt.xlabel('log10(mass) [g]')
-plt.ylabel('Count')
-plt.title('Final Mass Distribution with Cutoff')
-plt.legend()
-plt.grid(alpha=0.3)
-plt.show()
