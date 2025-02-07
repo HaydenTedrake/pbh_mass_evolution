@@ -9,6 +9,7 @@ def f(M):
     # in grams from Table I
     beta_masses = {
         'mu': 4.53e14,     # muon
+        'u': 1.6e14,       # up quark
         'd': 1.6e14,       # down quark
         's': 9.6e13,        # strange quark
         'c': 2.56e13,       # charm quark
@@ -25,20 +26,24 @@ def f(M):
     base = 1.569
     
     # Detailed calculation following the exact equation
-    result = base + 0.569 * (
-        np.exp(-M / (beta_masses['mu'])) +
-        3 * np.exp(-M / (beta_masses['d'])) +
-        3 * np.exp(-M / (beta_masses['s'])) +
-        3 * np.exp(-M / (beta_masses['c'])) +
-        np.exp(-M / (beta_masses['T'])) +
-        3 * np.exp(-M / (beta_masses['b'])) +
-        3 * np.exp(-M / (beta_masses['t'])) +
-        0.963 * np.exp(-M / (beta_masses['g'])) +
-        6 * np.exp(-M / (beta_masses['w'])) +
-        3 * np.exp(-M / (beta_masses['z'])) +
-        np.exp(-M / (beta_masses['h']))
+    result = (
+        base
+        + 0.569 * (
+            np.exp(-M / beta_masses['mu'])
+            + 3 * np.exp(-M / beta_masses['u'])
+            + 3 * np.exp(-M / beta_masses['d'])
+            + 3 * np.exp(-M / beta_masses['s'])
+            + 3 * np.exp(-M / beta_masses['c'])
+            + np.exp(-M / beta_masses['T'])
+            + 3 * np.exp(-M / beta_masses['b'])
+            + 3 * np.exp(-M / beta_masses['t'])
+            + 0.963 * np.exp(-M / beta_masses['g'])
+        )  
+        + 0.36 * np.exp(-M / beta_masses['w'])
+        + 0.18 * np.exp(-M / beta_masses['z'])
+        + 0.267 * np.exp(-M / beta_masses['h'])
     )
-    
+
     return result
 
 # Define a range for M in logarithmic space

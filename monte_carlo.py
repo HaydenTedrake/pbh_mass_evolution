@@ -87,19 +87,22 @@ def f(M):
     base = 1.569
     
     # Detailed calculation following the exact equation
-    result = base + 0.569 * (
-        np.exp(-M / (beta_masses['mu'])) +
-        3 * np.exp(-M / (beta_masses['u'])) +
-        3 * np.exp(-M / (beta_masses['d'])) +
-        3 * np.exp(-M / (beta_masses['s'])) +
-        3 * np.exp(-M / (beta_masses['c'])) +
-        np.exp(-M / (beta_masses['T'])) +
-        3 * np.exp(-M / (beta_masses['b'])) +
-        3 * np.exp(-M / (beta_masses['t'])) +
-        0.963 * np.exp(-M / (beta_masses['g'])) +
-        6 * np.exp(-M / (beta_masses['w'])) +
-        3 * np.exp(-M / (beta_masses['z'])) +
-        np.exp(-M / (beta_masses['h']))
+    result = (
+        base
+        + 0.569 * (
+            np.exp(-M / beta_masses['mu'])
+            + 3 * np.exp(-M / beta_masses['u'])
+            + 3 * np.exp(-M / beta_masses['d'])
+            + 3 * np.exp(-M / beta_masses['s'])
+            + 3 * np.exp(-M / beta_masses['c'])
+            + np.exp(-M / beta_masses['T'])
+            + 3 * np.exp(-M / beta_masses['b'])
+            + 3 * np.exp(-M / beta_masses['t'])
+            + 0.963 * np.exp(-M / beta_masses['g'])
+        )  
+        + 0.36 * np.exp(-M / beta_masses['w'])
+        + 0.18 * np.exp(-M / beta_masses['z'])
+        + 0.267 * np.exp(-M / beta_masses['h'])
     )
     
     return result
