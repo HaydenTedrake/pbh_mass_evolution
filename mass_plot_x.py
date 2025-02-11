@@ -64,7 +64,6 @@ def bh_temperature_in_GeV(mass_g):
 def f(M):
     """
     Calculate f(M) with M in grams
-    M_grams: black hole mass in grams
     """
     # in grams from Table I
     beta_masses = {
@@ -131,7 +130,6 @@ def solve_Mdot(M0, target_mass=1e9):
     event_mass_threshold.terminal = True  # Stop integration when event occurs
     event_mass_threshold.direction = -1   # Only trigger when crossing from above
 
-    
     explosion_time = np.inf
 
     # Use solve_ivp with adaptive step size
@@ -152,8 +150,14 @@ def solve_Mdot(M0, target_mass=1e9):
     print(f"Explosion time: {explosion_time} s")
     print(f"Explosion mass: {explosion_mass} g")
 
-    M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
-    M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
+    formation_time = explosion_time - age_of_universe
+    if formation_time < solution.t[0]:
+        print("Warning: Extrapolation beyond computed range.")
+        M0_exploding_now = None  # Or use another method to estimate it
+    else:
+        M0_exploding_now = solution.sol(formation_time)[0]
+
+    # M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
 
     print(f"Formation mass of a PBH exploding now: {M0_exploding_now} g")
     # print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
@@ -243,7 +247,7 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
 
 # Parameters
 explosion_x = 0
-M0 = 4e14
+M0 = 4e16
 x = 22000000
 target_mass = 1e9
 
