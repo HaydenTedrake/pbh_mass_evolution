@@ -150,13 +150,13 @@ def solve_Mdot(M0, target_mass=1e9):
     explosion_mass = solution.y[0][-1]
 
     print(f"Explosion time: {explosion_time} s")
-    # print(f"Explosion mass: {explosion_mass} g")
+    print(f"Explosion mass: {explosion_mass} g")
 
     M0_exploding_now = solution.sol(explosion_time-age_of_universe)[0]
     M0_exploding_3moago = solution.sol(explosion_time-age_of_universe+7884e3)[0]
 
     print(f"Formation mass of a PBH exploding now: {M0_exploding_now} g")
-    print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
+    # print(f"Formation mass difference of a PBH exploding now and a PBH exploding 3 months ago: {M0_exploding_now - M0_exploding_3moago} g")
     
     return solution.t, solution.y[0], explosion_time
 
