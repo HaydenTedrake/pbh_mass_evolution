@@ -15,7 +15,6 @@ def gev_to_grams(gev):
 
     return mass_grams
 
-
 def f(M):
     """
     Calculate f(M) with M in grams
