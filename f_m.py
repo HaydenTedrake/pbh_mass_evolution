@@ -1,38 +1,39 @@
 import numpy as np
-import matplotlib.pyplot as plt
-
-def gev_to_grams(gev):
-    # Constants
-    c = 2.998e8           # Speed of light in m/s
-    eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
-    gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
-
-    # Convert GeV to Joules
-    energy_joules = gev / (eV_per_joule * gev_per_ev)
-
-    # Convert energy to mass using m = E / c²
-    mass_grams = energy_joules / (c ** 2)
-
-    return mass_grams
+import matplotlib.pyplot as plt\
 
 def f(M):
     """
     Calculate f(M) with M in grams
     """
+    masses = {
+        'mu': 1.883531627e-28,  # muon
+        'u': 3.8e-30,           # up quark
+        'd': 7.6e-30,           # down quark
+        's': 2.9e-28,           # strange quark
+        'c': 2.3e-27,           # charm quark
+        'T': 3.16754e-27,       # tau
+        'b': 7.9e-27,           # bottom quark
+        't': 3.1e-25,           # top quark
+        'g': 0.0,               # gluon (massless)
+        'w': 1.433e-25,         # W boson
+        'z': 1.625e-25,         # Z boson
+        'h': 3.732e-25          # Higgs boson
+    }
+
     # in grams from Table I
     beta_masses = {
         'mu': 4.53e14,     # muon
         'u': 1.6e14,       # up quark
         'd': 1.6e14,       # down quark
-        's': 9.6e13,        # strange quark
-        'c': 2.56e13,       # charm quark
-        'T': 2.68e13,       # tau
-        'b': 9.07e12,       # bottom quark
-        't': 0.24e12,        # top quark (unobserved at time of paper)
-        'g': 1.1e14,         # gluon (effective mass)
-        'w': 7.97e11,         # W boson
-        'z': 7.01e11,         # Z boson
-        'h': 2.25e11          # Higgs boson
+        's': 9.6e13,       # strange quark
+        'c': 2.56e13,      # charm quark
+        'T': 2.68e13,      # tau
+        'b': 9.07e12,      # bottom quark
+        't': 0.24e12,      # top quark (unobserved at time of paper)
+        'g': 1.1e14,       # gluon (effective mass)
+        'w': 7.97e11,      # W boson
+        'z': 7.01e11,      # Z boson
+        'h': 2.25e11       # Higgs boson
     }
     
     # Base constant from the original equation
