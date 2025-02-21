@@ -61,23 +61,29 @@ def integrate_pbh_mass(M0, target_mass=1e9):
     times, masses = [], []
 
     def mass_evolution(sim_pointer):
-        """ Custom function for mass loss """
+        """ Custom function to evolve mass over time """
         sim = sim_pointer.contents
-        p = sim.particles[0]
+        p = sim.particles[0]  # Access the PBH
         M = p.m
         dM = Mdot(M) * sim.dt
+
+        # Cap the mass loss step to avoid oscillations
+        dM = max(dM, -0.001 * M)  # Limit how much mass can change per step
+
         p.m = max(M + dM, target_mass)  # Ensure mass doesn't go negative
 
+        # Store results
         times.append(sim.t)
         masses.append(p.m)
 
+        # Stop if target mass is reached
         if p.m <= target_mass:
-            sim.exit_condition = 1  # Stop integration when PBH reaches explosion mass
+            sim.exit_condition = 1  # Stops integration
 
     sim.additional_forces = mass_evolution
 
     # Set small timestep for accuracy
-    sim.dt = 1e9  
+    sim.dt = 1e-1000  
     sim.integrate(1e18)  # Run until PBH evaporates
 
     explosion_time = times[-1]
