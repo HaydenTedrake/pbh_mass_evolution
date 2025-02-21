@@ -1,14 +1,14 @@
-import rebound
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
 
-def Mdot(M):
+def Mdot(t, M):
     """ Compute dM/dt for mass evolution """
-    return -5.34e25 / (M * M)  # Simplified version
+    return -5.34e25 / (M * M)  # Hawking radiation mass loss
 
 def integrate_pbh_mass(M0, target_mass=1e9):
     """
-    Uses REBOUND to integrate the mass evolution of a PBH.
+    Uses SciPy's solve_ivp to integrate the mass evolution of a PBH.
     
     Args:
         M0 (float): Initial mass in grams
@@ -17,55 +17,36 @@ def integrate_pbh_mass(M0, target_mass=1e9):
     Returns:
         times, masses (arrays)
     """
-    sim = rebound.Simulation()
-    sim.integrator = "IAS15"  # High-accuracy adaptive integrator
+    # Define the stopping event (when M reaches target_mass)
+    def event(t, M):
+        return M[0] - target_mass  # Extract scalar value from list
+    event.terminal = True  # Stop when target_mass is reached
+    event.direction = -1    # Only trigger when mass decreases past target_mass
 
-    # Add a dummy particle (PBH mass tracking)
-    sim.add(m=M0, x=0, y=0, z=0, vx=0, vy=0, vz=0)
+    # Solve the differential equation
+    t_span = [0, 1e18]  # Start from t=0 and integrate forward
+    sol = solve_ivp(Mdot, t_span, [M0], method='RK45', events=event, max_step=1e15)
 
-    times = []
-    masses = []
-
-    def mass_evolution(sim_pointer):
-        """ Custom function to evolve mass over time """
-        sim = sim_pointer.contents  # Access simulation contents
-        p = sim.particles[0]  # Correct way to access particles
-        M = p.m
-        dM = Mdot(M) * sim.dt
-        p.m = max(M + dM, target_mass)  # Ensure mass doesn't go negative
-
-        # Debugging info
-        print(f"Time: {sim.t:.2e}, Mass: {p.m:.2e}, dM: {dM:.2e}")
-
-        # Store values
-        times.append(sim.t)
-        masses.append(p.m)
-
-        # Stop when target mass is reached
-        if p.m <= target_mass:
-            sim.exit_condition = 1  # Stops integration when mass threshold is hit
-
-    sim.additional_forces = mass_evolution
-
-    # Adjust timestep and run for longer
-    sim.dt = 1e9  # Reduce dt to prevent instability
-    sim.integrate(1e18)  # Run until explosion
-
-    return np.array(times), np.array(masses)
+    return sol.t, sol.y[0]
 
 # Parameters
-M0 = 4e16  # Initial PBH mass in grams
-target_mass = 1e9  # Mass when PBH explodes
+M0 = 4e14  # Initial PBH mass in grams (adjusted to match previous graph)
+target_mass = 5.93e10  # Target mass when PBH explodes
 
 # Integrate
 times, masses = integrate_pbh_mass(M0, target_mass)
 
+# Shift time relative to explosion
+explosion_time = times[-1]
+times_relative = times - explosion_time
+
 # Plot
 plt.figure(figsize=(10, 6))
-plt.semilogy(times, masses, label="PBH Mass Evolution")
-plt.xlabel("Time (s)")
-plt.ylabel("Mass (g)")
-plt.title("Primordial Black Hole Mass Evolution using REBOUND")
+plt.semilogy(times_relative, masses, 'r--', label="Numerical Solution")
+plt.axvline(0, color='black', linestyle=':', label="Explosion Time")
+plt.xlabel("Time relative to explosion time (s)")
+plt.ylabel("PBH Mass (g)")
+plt.title(f"PBH Mass Evolution (M₀ = {M0:.2e} g)")
 plt.legend()
 plt.grid()
 plt.show()
