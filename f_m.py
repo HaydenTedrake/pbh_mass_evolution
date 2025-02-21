@@ -26,18 +26,36 @@ def f(M):
         'h': 3.732e-25          # Higgs boson
     }
 
-    beta_0 = 2.66
-    beta_1/2 = 4.53
-    beta_1 = 6.04
-    beta_2 = 9.56
+    beta_values = {
+        '0': 2.66,
+        '1/2': 4.53,
+        '1': 6.04,
+        '2': 9.56
+    }
 
     base = 1.569
 
     def beta_masses(mass, spin):
         """Calculate hbar * c^3 / (8 * pi * G * mass) and return in grams."""
-        return (hbar * c**3) / (8 * math.pi * G * mass)
+        return (hbar * c**3) / (8 * math.pi * G * mass) * beta_values[spin]
     
-    result = {}
+    result = (
+        base
+        + 0.569 * (
+            np.exp(-M / beta_masses(masses['mu'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['u'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['d'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['s'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['c'], '1/2'))
+            + np.exp(-M / beta_masses(masses['T'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['b'], '1/2'))
+            + 3 * np.exp(-M / beta_masses(masses['t'], '1/2'))
+            + 0.963 * np.exp(-M / beta_masses(masses['g'], '1'))
+        )  
+        + 0.36 * np.exp(-M / beta_masses(masses['w'], '1'))
+        + 0.18 * np.exp(-M / beta_masses(masses['z'], '1'))
+        + 0.267 * np.exp(-M / beta_masses(masses['h'], '0'))
+    )
     # # in grams from Table I
     # beta_masses = {
     #     'mu': 4.53e14,     # muon
