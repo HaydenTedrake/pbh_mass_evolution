@@ -2,6 +2,7 @@ import rebound
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from tqdm import tqdm  # Import progress bar
 
 # Constants
 age_of_universe = 4.35e17  # Universe age in seconds
@@ -41,7 +42,7 @@ def Mdot(M):
 
 def integrate_pbh_mass(M0, target_mass=1e9):
     """
-    Uses REBOUND to integrate PBH mass evolution.
+    Uses REBOUND to integrate PBH mass evolution with a progress bar.
     
     Args:
         M0 (float): Initial mass in grams
@@ -54,11 +55,11 @@ def integrate_pbh_mass(M0, target_mass=1e9):
     """
     sim = rebound.Simulation()
     sim.integrator = "IAS15"  # High-accuracy adaptive timestep
-
-    # Add a dummy particle (mass-tracking PBH)
     sim.add(m=M0, x=0, y=0, z=0, vx=0, vy=0, vz=0)
 
     times, masses = [], []
+    total_steps = int(1e6)  # Estimated number of integration steps
+    progress = tqdm(total=total_steps, desc="Integrating PBH Mass", unit="step")
 
     def mass_evolution(sim_pointer):
         """ Custom function to evolve mass over time """
@@ -67,26 +68,24 @@ def integrate_pbh_mass(M0, target_mass=1e9):
         M = p.m
         dM = Mdot(M) * sim.dt
 
-        # Cap the mass loss step to avoid oscillations
         dM = max(dM, -0.001 * M)  # Limit how much mass can change per step
-
         p.m = max(M + dM, target_mass)  # Ensure mass doesn't go negative
 
-        # Store results
         times.append(sim.t)
         masses.append(p.m)
+        
+        progress.update(1)  # Update progress bar
 
-        # Stop if target mass is reached
         if p.m <= target_mass:
             sim.exit_condition = 1  # Stops integration
+            progress.close()  # Close the progress bar
 
     sim.additional_forces = mass_evolution
-
-    # Set small timestep for accuracy
     sim.dt = 1e-1000  
-    sim.integrate(1e18)  # Run until PBH evaporates
+    sim.integrate(1e18)  
 
     explosion_time = times[-1]
+    progress.close()  # Close the progress bar
     print(f"Explosion time: {explosion_time:.2e} s")
     
     return np.array(times), np.array(masses), explosion_time
@@ -104,10 +103,8 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
     displacement = np.abs(x - explosion_x)  # in km
     boundary_time = displacement / 220  # (km/s)
     
-    # Solve using REBOUND
     times_numerical, masses_numerical, explosion_time = integrate_pbh_mass(M0, target_mass)
 
-    # Analytical approximation
     def exp_time_points(T, num_points=1000000):
         exp_space = np.exp(np.linspace(0, 5, num_points))
         return T - T * (exp_space - exp_space[0]) / (exp_space[-1] - exp_space[0])
@@ -120,11 +117,9 @@ def PBHDemo(explosion_x, M0, x, target_mass=1e9):
 
     M_analytical = MassAnalytical(M0, t_analytical)
 
-    # Find index closest to -boundary_time
     boundary_time_idx = np.abs(times_numerical - (-boundary_time)).argmin()
     mass_at_boundary = masses_numerical[boundary_time_idx]
 
-    # Plot results
     plt.figure(figsize=(12, 8))
     plt.plot(t_analytical - explosion_time, M_analytical, 'b-', label='Analytical Solution', alpha=0.8)
     plt.semilogy(times_numerical - explosion_time, masses_numerical, 'r--', label='Numerical Solution', linewidth=2)
