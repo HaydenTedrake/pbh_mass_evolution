@@ -20,7 +20,7 @@ def f(M):
         'T': 3.16754e-27,       # tau
         'b': 7.9e-27,           # bottom quark
         't': 3.1e-25,           # top quark
-        'g': 0.0,               # gluon (massless)
+        'g': 0.01,           # gluon (massless)
         'w': 1.433e-25,         # W boson
         'z': 1.625e-25,         # Z boson
         'h': 3.732e-25          # Higgs boson
@@ -50,7 +50,7 @@ def f(M):
             + np.exp(-M / beta_masses(masses['T'], '1/2'))
             + 3 * np.exp(-M / beta_masses(masses['b'], '1/2'))
             + 3 * np.exp(-M / beta_masses(masses['t'], '1/2'))
-            + 0.963 * np.exp(-M / beta_masses(masses['g'], '1'))
+            #+ 0.963 * np.exp(-M / beta_masses(masses['g'], '1'))
         )  
         + 0.36 * np.exp(-M / beta_masses(masses['w'], '1'))
         + 0.18 * np.exp(-M / beta_masses(masses['z'], '1'))
