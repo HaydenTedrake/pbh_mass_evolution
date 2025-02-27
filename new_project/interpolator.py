@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 # List of energy levels and corresponding .bin files
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
@@ -30,5 +31,26 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
 
 print("All interpolators have been built successfully!")
 
-value_at_point = interpolators[100]((-5000, 0, 0, 0))
-print(f"Value at E=100, (t=-5000, x=0, y=0, z=0): {value_at_point}")
+# value_at_point = interpolators[100]((-5000, 0, 0, 0))
+# print(f"Value at E=100, (t=-5000, x=0, y=0, z=0): {value_at_point}")
+
+# Prepare a figure
+plt.figure(figsize=(10, 6))
+
+# Evaluate and plot for each energy
+for E in energy_levels:
+    # Interpolate values at (t, x=0, y=0, z=0.01)
+    values = []
+    for t in t_values:
+        val = interpolators[E]((t, 0, 0, 0.01))
+        values.append(val)
+        
+    # Plot
+    plt.plot(t_values, values, label=f"E = {E:.3g} GeV")
+
+plt.title("Density vs. Time for each Energy (x=0, y=0, z=0.01)")
+plt.xlabel("Time")
+plt.ylabel("Density")
+plt.legend()
+plt.tight_layout()
+plt.show()
