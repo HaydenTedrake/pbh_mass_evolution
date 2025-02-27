@@ -174,17 +174,15 @@ mass_history, times = evolve(sampled_masses)
 # ----------------------------------
 # Create figure and axis
 fig, ax = plt.subplots(figsize=(10, 6))
-plt.subplots_adjust(bottom=0.25)  # Make room for slider at bottom
+plt.subplots_adjust(bottom=0.25)
 
-# Calculate initial distribution to set y-axis limits
 initial_masses = mass_history[:, 0]
 hist_initial, bins_initial = np.histogram(
     np.log10(initial_masses[initial_masses > 1e9]), 
     bins=50
 )
-y_max = np.max(hist_initial) * 1.1  # Add 10% margin
+y_max = np.max(hist_initial) * 1.1
 
-# Start with the earliest time index
 current_index = 0
 masses_at_time = mass_history[:, current_index]
 
@@ -208,36 +206,28 @@ ax.set_xlim(11, 19)
 ax.set_ylim(0, y_max)
 ax.grid(True, alpha=0.3)
 ax.legend()
-ax.set_title(f'Mass Distribution (Time: {times[current_index]:.2e} seconds)')
+ax.set_title(f'Mass Distribution (Time: {times[current_index]:.2e} s)')
 
-# Create an axis for the slider
-slider_ax = plt.axes([0.15, 0.1, 0.7, 0.03])  # [left, bottom, width, height]
-
-# Build the slider for time index
+slider_ax = plt.axes([0.15, 0.1, 0.7, 0.03])
 time_slider = Slider(
     ax=slider_ax,
     label='Time',
     valmin=0,
     valmax=len(times) - 1,
     valinit=current_index,
-    valstep=1  # step through discrete time indices
+    valstep=1
 )
 
 def update(val):
-    # Convert slider value to integer index
     idx = int(val)
-    
-    # Clear the axes for fresh plot
     ax.clear()
     
-    # Always plot the initial distribution in red
     ax.hist(
         np.log10(initial_masses[initial_masses > 1e9]),
         bins=50, color="red", alpha=0.3, edgecolor="darkred",
         label="Initial Distribution"
     )
     
-    # Plot the distribution at the new time index in blue
     masses_at_time = mass_history[:, idx]
     ax.hist(
         np.log10(masses_at_time[masses_at_time > 1e9]),
@@ -245,19 +235,77 @@ def update(val):
         label="Current Distribution"
     )
     
-    # Restore the same axes limits and styling
     ax.set_xlabel('log10(mass) [g]')
     ax.set_ylabel('Count')
     ax.set_xlim(11, 19)
     ax.set_ylim(0, y_max)
     ax.grid(True, alpha=0.3)
     ax.legend()
-    ax.set_title(f'Mass Distribution (Time: {times[idx]:.2e} seconds)')
-    
-    # Redraw the figure
+    ax.set_title(f'Mass Distribution (Time: {times[idx]:.2e} s)')
     fig.canvas.draw_idle()
 
-# Register the slider update function
 time_slider.on_changed(update)
-
 plt.show()
+
+# ------------------------------------------------------
+# AFTER EVOLUTION: CONSTRUCT & NORMALIZE THE FINAL MF
+# ------------------------------------------------------
+
+# Grab final masses
+final_masses = mass_history[:, -1]
+final_masses = final_masses[final_masses > 1e9]
+
+# Histogram in log10-space
+num_bins = 50
+log_bins = np.linspace(9, 19, num_bins + 1)  # from 1e9 g to 1e19 g
+hist_vals, _ = np.histogram(np.log10(final_masses), bins=log_bins)
+
+# Normalize so that the total "area" under the histogram in log-space is 1
+hist_vals = hist_vals.astype(float)
+massfunc_log_norm = hist_vals / hist_vals.sum()  # fraction per log-bin
+
+# Bin centers in log-space, then convert to linear mass
+log_centers = 0.5 * (log_bins[:-1] + log_bins[1:])
+mass_centers = 10**log_centers
+
+# dn/dM = (1/M) * (normalized distribution in log M)
+dn_dM = massfunc_log_norm / mass_centers
+
+# Compute the widths in linear mass space for each log-bin
+mass_edges = 10**log_bins
+bin_widths = np.diff(mass_edges)
+
+# Build a discrete cumulative distribution: n(M) = ∫ (dn/dM) dM, from the lowest to M
+cdf = np.cumsum(dn_dM * bin_widths)
+
+def number_density_up_to(M):
+    """
+    Returns the cumulative integral of dn/dM from the smallest bin
+    up to mass = M. This effectively is the fraction of black holes
+    with mass < M in this final snapshot, if you interpret the total = 1.
+    """
+    # If M is below our lowest bin, the integral is zero
+    if M < mass_edges[0]:
+        return 0.0
+    # If above our highest bin, return full integral
+    if M >= mass_edges[-1]:
+        return cdf[-1]
+    
+    # Otherwise, find which bin M falls into
+    idx = np.searchsorted(mass_edges, M) - 1
+    # fraction of that bin to integrate
+    partial_fraction = (M - mass_edges[idx]) / bin_widths[idx]
+    partial_bin_area = dn_dM[idx] * (M - mass_edges[idx])
+    
+    # sum up everything below idx + partial of the idx-th bin
+    return (cdf[idx-1] + partial_bin_area) if idx > 0 else partial_bin_area
+
+# Example usage: get fraction up to 1e14 g
+example_mass = 1.0e14
+fraction_below_1e14 = number_density_up_to(example_mass)
+print(f"Fraction of final BHs with M < {example_mass:.1g} g = {fraction_below_1e14:.4f}")
+
+# Similarly, you can get fraction up to 1e18 g, or any other mass
+example_mass2 = 1.0e18
+fraction_below_1e18 = number_density_up_to(example_mass2)
+print(f"Fraction of final BHs with M < {example_mass2:.1g} g = {fraction_below_1e18:.4f}")
