@@ -7,23 +7,39 @@ hbar = 1.0545718e-27  # erg·s
 c = 2.99792458e10  # cm/s
 G = 6.67430e-8  # cm³/g·s²
 
+def grams_to_gev(grams):
+    # Constants
+    c = 2.998e8           # Speed of light in m/s
+    eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
+    gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
+    
+    # Convert mass to energy using E = mc²
+    energy_joules = grams * (c ** 2)
+    
+    # Convert energy from Joules to GeV using our previous function
+    energy_gev = energy_joules * eV_per_joule * gev_per_ev
+    
+    return energy_gev
+
 def f(M):
     """
     Calculate f(M) with M in grams
     """
+    M = grams_to_gev(M)
+    # particle masses in GeV
     masses = {
-        'mu': 1.883531627e-28,  # muon
-        'u': 3.8e-30,           # up quark
-        'd': 7.6e-30,           # down quark
-        's': 2.9e-28,           # strange quark
-        'c': 2.3e-27,           # charm quark
-        'T': 3.16754e-27,       # tau
-        'b': 7.9e-27,           # bottom quark
-        't': 3.1e-25,           # top quark
-        'g': 0.01,              # gluon (massless)
-        'w': 1.433e-25,         # W boson
-        'z': 1.625e-25,         # Z boson
-        'h': 3.732e-25          # Higgs boson
+        'mu': 0.10566,          # muon
+        'u': 0.34,              # up quark
+        'd': 0.34,              # down quark
+        's': 0.96,              # strange quark
+        'c': 1.28,              # charm quark
+        'T': 1.7768,            # tau
+        'b': 4.18,              # bottom quark
+        't': 173.1,             # top quark
+        'g': 0.650,             # gluon
+        'w': 80.433,            # W boson
+        'z': 91.19,             # Z boson
+        'h': 124.07,            # Higgs boson
     }
 
     beta_values = {
@@ -111,7 +127,7 @@ plt.grid(True, which="both", ls="-", alpha=0.4)
 plt.legend(fontsize=12)
 
 # Customize y-axis ticks
-plt.yticks(np.arange(2, 16, 2))  # Set y-axis ticks at intervals of 2, up to 14
+plt.yticks(np.arange(2, 10, 2))  # Set y-axis ticks at intervals of 2, up to 14
 
 # Display the plot
 plt.show()
