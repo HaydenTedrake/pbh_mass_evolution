@@ -9,7 +9,7 @@ from scipy.special import gamma
 # -------------------------
 mass_function_choice = 'critical_collapse'  # options: 'lognormal' or 'critical_collapse'
 age_of_universe = 4.35e17  # in seconds (4.35e17 ~ 13.8 billion years in seconds)
-N = 10000  # number of black holes to sample
+N = 100  # number of black holes to sample
 
 # Lognormal parameters (if using 'lognormal')
 sigma = 2.0       # standard deviation
