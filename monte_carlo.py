@@ -9,7 +9,7 @@ from scipy.special import gamma
 # -------------------------
 mass_function_choice = 'critical_collapse'  # options: 'lognormal' or 'critical_collapse'
 age_of_universe = 4.35e17  # in seconds (4.35e17 ~ 13.8 billion years in seconds)
-N = 1000  # number of black holes to sample/evolve
+N = 100000  # number of black holes to sample/evolve
 
 # Lognormal parameters (if using 'lognormal')
 sigma = 2.0       # standard deviation
@@ -46,28 +46,28 @@ def critical_collapse_pdf(mass, Mp):
 # SAMPLING THE DISTRIBUTION
 # -------------------------
 # We'll define the mass range (for building the PDF and CDF).
-sampled_masses = np.logspace(-5, 19, 10000)  # from 10e-5 g to 10e19 g
+masses = np.logspace(10, 20, 10000)  # from 10e-5 g to 10e19 g
 
 # # Select the PDF based on user choice
-# if mass_function_choice == 'lognormal':
-#     pdf_values = lognormal_pdf(masses, mu, sigma)
-# elif mass_function_choice == 'critical_collapse':
-#     pdf_values = critical_collapse_pdf(masses, Mp)
-# else:
-#     raise ValueError("Invalid mass_function_choice. Use 'lognormal' or 'critical_collapse'.")
+if mass_function_choice == 'lognormal':
+    pdf_values = lognormal_pdf(masses, mu, sigma)
+elif mass_function_choice == 'critical_collapse':
+    pdf_values = critical_collapse_pdf(masses, Mp)
+else:
+    raise ValueError("Invalid mass_function_choice. Use 'lognormal' or 'critical_collapse'.")
 
-# # Normalize the PDF so it integrates to 1 across this discrete grid
-# pdf_normalized = pdf_values / np.sum(pdf_values)
+# Normalize the PDF so it integrates to 1 across this discrete grid
+pdf_normalized = pdf_values / np.sum(pdf_values)
 
-# # Compute the CDF via cumulative sum
-# cdf_values = np.cumsum(pdf_normalized)
-# cdf_values /= cdf_values[-1]  # normalize so last entry is exactly 1
+# Compute the CDF via cumulative sum
+cdf_values = np.cumsum(pdf_normalized)
+cdf_values /= cdf_values[-1]  # normalize so last entry is exactly 1
 
-# # Inverse transform sampling:
-# #   1. Generate N random numbers in [0, 1].
-# #   2. Use np.interp(...) to map them to the masses array via the CDF.
-# random_values = np.random.rand(N)
-# sampled_masses = np.interp(random_values, cdf_values, masses)
+# Inverse transform sampling:
+#   1. Generate N random numbers in [0, 1].
+#   2. Use np.interp(...) to map them to the masses array via the CDF.
+random_values = np.random.rand(N)
+sampled_masses = np.clip(np.interp(random_values, cdf_values, masses), 1e-5, 1e19)
 
 # -------------------------
 # HAWKING RADIATION MODEL
@@ -300,7 +300,7 @@ def number_density_up_to(M):
     # sum up everything below idx + partial of the idx-th bin
     return (cdf[idx-1] + partial_bin_area) if idx > 0 else partial_bin_area
 
-# Example usage: get fraction up to 1e14 g
+# Example usage: get fraction up t o 1e14 g
 example_mass = 1.0e14
 fraction_below_1e14 = number_density_up_to(example_mass)
 print(f"Fraction of final BHs with M < {example_mass:.1g} g = {fraction_below_1e14:.4f}")
