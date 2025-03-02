@@ -70,6 +70,7 @@ cdf_low = np.interp(m_low, masses, cdf_values)
 cdf_high = np.interp(m_high, masses, cdf_values)
 
 # Compute probability in range
+# *******remember to account for this probability later on
 probability = cdf_high - cdf_low
 
 # Inverse transform sampling:
