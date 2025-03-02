@@ -26,6 +26,7 @@ def f(M):
     Calculate f(M) with M in grams
     """
     M = grams_to_gev(M)
+
     # particle masses in GeV
     masses = {
         'mu': 0.10566,          # muon
@@ -52,7 +53,7 @@ def f(M):
     base = 1.569
 
     def beta_masses(mass, spin):
-        """Calculate hbar * c^3 / (8 * pi * G * mass) and return in grams."""
+        """Calculate hbar * c^3 / (8 * pi * G * mass) and return in GeV."""
         return (hbar * c**3) / (8 * math.pi * G * mass) * beta_values[spin]
     
     result = (
@@ -127,7 +128,7 @@ plt.grid(True, which="both", ls="-", alpha=0.4)
 plt.legend(fontsize=12)
 
 # Customize y-axis ticks
-plt.yticks(np.arange(2, 10, 2))  # Set y-axis ticks at intervals of 2, up to 14
+plt.yticks(np.arange(2, 16, 2))  # Set y-axis ticks at intervals of 2, up to 14
 
 # Display the plot
 plt.show()

@@ -63,11 +63,20 @@ pdf_normalized = pdf_values / np.sum(pdf_values)
 cdf_values = np.cumsum(pdf_normalized)
 cdf_values /= cdf_values[-1]  # normalize so last entry is exactly 1
 
+m_low = 10e-5
+m_high = 10e19
+
+cdf_low = np.interp(m_low, masses, cdf_values)
+cdf_high = np.interp(m_high, masses, cdf_values)
+
+# Compute probability in range
+probability = cdf_high - cdf_low
+
 # Inverse transform sampling:
 #   1. Generate N random numbers in [0, 1].
 #   2. Use np.interp(...) to map them to the masses array via the CDF.
 random_values = np.random.rand(N)
-sampled_masses = np.clip(np.interp(random_values, cdf_values, masses), 1e-5, 1e19)
+sampled_masses = np.clip(np.interp(random_values, cdf_values, masses), m_low, m_high)
 
 # -------------------------
 # HAWKING RADIATION MODEL
