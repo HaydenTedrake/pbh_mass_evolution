@@ -50,7 +50,8 @@ def f(M):
     }
 
     def beta_masses(particle):
-        return (hbar * c) / (8 * math.pi * G * masses[particle]) * beta_coef[spins[particle]]
+        beta = beta_coef[spins[particle]]
+        return (hbar * c) / (8 * math.pi * G * masses[particle]) * beta
     
     # Base constant from the original equation
     base = 1.569

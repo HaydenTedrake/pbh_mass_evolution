@@ -62,48 +62,22 @@ def bh_temperature_in_GeV(mass_g):
     return temperature_GeV
 
 def f(M):
-    """
-    Calculate f(M) with M in grams
-    """
-    # in grams from Table I
-    beta_masses = {
-        'mu': 4.53e14,     # muon
-        'u': 1.6e14,       # up quark
-        'd': 1.6e14,       # down quark
-        's': 9.6e13,        # strange quark
-        'c': 2.56e13,       # charm quark
-        'T': 2.68e13,       # tau
-        'b': 9.07e12,       # bottom quark
-        't': 0.24e12,        # top quark (unobserved at time of paper)
-        'g': 1.1e14,         # gluon (effective mass)
-        'w': 7.97e11,         # W boson
-        'z': 7.01e11,         # Z boson
-        'h': 2.25e11          # Higgs boson
-    }
+    """Calculate f(M) with M in grams."""
     
-    # Base constant from the original equation
-    base = 1.569
+    masses_gev = {'mu': 0.10566, 'u': 0.34, 'd': 0.34, 's': 0.96, 'c': 1.28, 'T': 1.7768,
+                  'b': 4.18, 't': 173.1, 'g': 0.650, 'w': 80.433, 'z': 91.19, 'h': 124.07}
+    spins = {'mu': '1/2', 'u': '1/2', 'd': '1/2', 's': '1/2', 'c': '1/2', 'T': '1/2',
+             'b': '1/2', 't': '1/2', 'g': '1', 'w': '1', 'z': '1', 'h': '0'}
+    beta_coef = {'0': 2.66, '1/2': 4.53, '1': 6.04, '2': 9.56}
     
-    # Detailed calculation following the exact equation
-    result = (
-        base
-        + 0.569 * (
-            np.exp(-M / beta_masses['mu'])
-            + 3 * np.exp(-M / beta_masses['u'])
-            + 3 * np.exp(-M / beta_masses['d'])
-            + 3 * np.exp(-M / beta_masses['s'])
-            + 3 * np.exp(-M / beta_masses['c'])
-            + np.exp(-M / beta_masses['T'])
-            + 3 * np.exp(-M / beta_masses['b'])
-            + 3 * np.exp(-M / beta_masses['t'])
-            + 0.963 * np.exp(-M / beta_masses['g'])
-        )  
-        + 0.36 * np.exp(-M / beta_masses['w'])
-        + 0.18 * np.exp(-M / beta_masses['z'])
-        + 0.267 * np.exp(-M / beta_masses['h'])
-    )
+    masses = {p: gev_to_grams(m) for p, m in masses_gev.items()}
+    beta_masses = lambda p: (hbar * c) / (8 * math.pi * G * masses[p]) * beta_coef[spins[p]]
 
-    return result
+    exp_terms = lambda *particles: sum(np.exp(-M / beta_masses(p)) for p in particles)
+
+    return (1.569 + 0.569 * (exp_terms('mu') + 3 * exp_terms('u', 'd', 's', 'c', 'b', 't') + 
+                             exp_terms('T') + 0.963 * exp_terms('g')) +
+            0.36 * exp_terms('w') + 0.18 * exp_terms('z') + 0.267 * exp_terms('h'))
 
 def Mdot(M):
     return -5.34e25 * f(M) / (M * M)
