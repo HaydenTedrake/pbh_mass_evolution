@@ -4,6 +4,11 @@ from matplotlib.widgets import Slider
 from scipy.integrate import solve_ivp
 from scipy.special import gamma
 
+def gev_to_grams(energy_gev):
+    energy_ergs = energy_gev * 1.60218e-3
+    mass_grams = energy_ergs / (c ** 2)
+    return mass_grams
+
 # -------------------------
 # CONFIGURATION & PARAMETERS
 # -------------------------

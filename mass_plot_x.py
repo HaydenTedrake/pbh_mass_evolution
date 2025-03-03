@@ -5,6 +5,11 @@ from scipy.integrate import solve_ivp
 
 age_of_universe = 4.35e17  # in seconds
 
+def gev_to_grams(energy_gev):
+    energy_ergs = energy_gev * 1.60218e-3
+    mass_grams = energy_ergs / (c ** 2)
+    return mass_grams
+
 def joules_to_gev(joules):
     # Constants
     eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
