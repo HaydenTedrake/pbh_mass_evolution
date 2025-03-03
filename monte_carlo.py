@@ -46,7 +46,7 @@ def critical_collapse_pdf(mass, Mp):
 # SAMPLING THE DISTRIBUTION
 # -------------------------
 # We'll define the mass range (for building the PDF and CDF).
-masses = np.logspace(10, 20, 10000)  # from 10e-5 g to 10e19 g
+masses = np.logspace(-5, 20, 10000)  # from 10e-5 g to 10e19 g
 
 # # Select the PDF based on user choice
 if mass_function_choice == 'lognormal':
