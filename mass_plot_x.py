@@ -4,6 +4,9 @@ import math
 from scipy.integrate import solve_ivp
 
 age_of_universe = 4.35e17  # in seconds
+hbar = 1.0545718e-27  # erg·s
+c = 2.99792458e10     # cm/s
+G = 6.67430e-8        # cm³/g·s²
 
 def gev_to_grams(energy_gev):
     energy_ergs = energy_gev * 1.60218e-3
