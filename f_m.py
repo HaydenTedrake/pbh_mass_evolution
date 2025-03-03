@@ -7,40 +7,81 @@ hbar = 1.0545718e-27  # erg·s
 c = 2.99792458e10  # cm/s
 G = 6.67430e-8  # cm³/g·s²
 
-def grams_to_gev(grams):
+def gev_to_grams(energy_gev):
     # Constants
-    c = 2.998e8           # Speed of light in m/s
+    c = 2.998e8              # Speed of light in m/s
     eV_per_joule = 6.242e18  # 1 Joule = 6.242 x 10^18 eV
     gev_per_ev = 1e-9        # 1 GeV = 10^9 eV
     
-    # Convert mass to energy using E = mc²
-    energy_joules = grams * (c ** 2)
+    # Convert energy from GeV to Joules
+    energy_joules = energy_gev / (eV_per_joule * gev_per_ev)
     
-    # Convert energy from Joules to GeV using our previous function
-    energy_gev = energy_joules * eV_per_joule * gev_per_ev
+    # Convert energy to mass in grams via E = mc^2  =>  m = E / c^2
+    mass_grams = energy_joules / (c ** 2)
     
-    return energy_gev
+    return mass_grams
+
+def old_f(M):
+    """
+    Calculate f(M) with M in grams
+    """
+    # in grams from Table I
+    beta_masses = {
+        'mu': 4.53e14,     # muon
+        'u': 1.6e14,       # up quark
+        'd': 1.6e14,       # down quark
+        's': 9.6e13,       # strange quark
+        'c': 2.56e13,      # charm quark
+        'T': 2.68e13,      # tau
+        'b': 9.07e12,      # bottom quark
+        't': 0.24e12,      # top quark (unobserved at time of paper)
+        'g': 1.1e14,       # gluon (effective mass)
+        'w': 7.97e11,      # W boson
+        'z': 7.01e11,      # Z boson
+        'h': 2.25e11       # Higgs boson
+    }
+    
+    # Base constant from the original equation
+    base = 1.569
+    
+    # Detailed calculation following the exact equation
+    result = (
+        base
+        + 0.569 * (
+            np.exp(-M / beta_masses['mu'])
+            + 3 * np.exp(-M / beta_masses['u'])
+            + 3 * np.exp(-M / beta_masses['d'])
+            + 3 * np.exp(-M / beta_masses['s'])
+            + 3 * np.exp(-M / beta_masses['c'])
+            + np.exp(-M / beta_masses['T'])
+            + 3 * np.exp(-M / beta_masses['b'])
+            + 3 * np.exp(-M / beta_masses['t'])
+            + 0.963 * np.exp(-M / beta_masses['g'])
+        )  
+        + 0.36 * np.exp(-M / beta_masses['w'])
+        + 0.18 * np.exp(-M / beta_masses['z'])
+        + 0.267 * np.exp(-M / beta_masses['h'])
+    )
+    return result
 
 def f(M):
     """
     Calculate f(M) with M in grams
     """
-    M = grams_to_gev(M)
-
     # particle masses in GeV
     masses = {
-        'mu': 0.10566,          # muon
-        'u': 0.34,              # up quark
-        'd': 0.34,              # down quark
-        's': 0.96,              # strange quark
-        'c': 1.28,              # charm quark
-        'T': 1.7768,            # tau
-        'b': 4.18,              # bottom quark
-        't': 173.1,             # top quark
-        'g': 0.650,             # gluon
-        'w': 80.433,            # W boson
-        'z': 91.19,             # Z boson
-        'h': 124.07,            # Higgs boson
+        'mu': gev_to_grams(0.10566),          # muon
+        'u': gev_to_grams(0.34),              # up quark
+        'd': gev_to_grams(0.34),              # down quark
+        's': gev_to_grams(0.96),              # strange quark
+        'c': gev_to_grams(1.28),              # charm quark
+        'T': gev_to_grams(1.7768),            # tau
+        'b': gev_to_grams(4.18),              # bottom quark
+        't': gev_to_grams(173.1),             # top quark
+        'g': gev_to_grams(0.650),             # gluon
+        'w': gev_to_grams(80.433),            # W boson
+        'z': gev_to_grams(91.19),             # Z boson
+        'h': gev_to_grams(124.07),            # Higgs boson
     }
 
     beta_values = {
@@ -53,9 +94,9 @@ def f(M):
     base = 1.569
 
     def beta_masses(mass, spin):
-        """Calculate hbar * c^3 / (8 * pi * G * mass) and return in GeV."""
+        """Calculate hbar * c^3 / (8 * pi * G * mass) and return in grams."""
         return (hbar * c**3) / (8 * math.pi * G * mass) * beta_values[spin]
-    
+
     result = (
         base
         + 0.569 * (
@@ -73,48 +114,13 @@ def f(M):
         + 0.18 * np.exp(-M / beta_masses(masses['z'], '1'))
         + 0.267 * np.exp(-M / beta_masses(masses['h'], '0'))
     )
-    # # in grams from Table I
-    # beta_masses = {
-    #     'mu': 4.53e14,     # muon
-    #     'u': 1.6e14,       # up quark
-    #     'd': 1.6e14,       # down quark
-    #     's': 9.6e13,       # strange quark
-    #     'c': 2.56e13,      # charm quark
-    #     'T': 2.68e13,      # tau
-    #     'b': 9.07e12,      # bottom quark
-    #     't': 0.24e12,      # top quark (unobserved at time of paper)
-    #     'g': 1.1e14,       # gluon (effective mass)
-    #     'w': 7.97e11,      # W boson
-    #     'z': 7.01e11,      # Z boson
-    #     'h': 2.25e11       # Higgs boson
-    # }
-    
-    # # Base constant from the original equation
-    # base = 1.569
-    
-    # # Detailed calculation following the exact equation
-    # result = (
-    #     base
-    #     + 0.569 * (
-    #         np.exp(-M / beta_masses['mu'])
-    #         + 3 * np.exp(-M / beta_masses['u'])
-    #         + 3 * np.exp(-M / beta_masses['d'])
-    #         + 3 * np.exp(-M / beta_masses['s'])
-    #         + 3 * np.exp(-M / beta_masses['c'])
-    #         + np.exp(-M / beta_masses['T'])
-    #         + 3 * np.exp(-M / beta_masses['b'])
-    #         + 3 * np.exp(-M / beta_masses['t'])
-    #         + 0.963 * np.exp(-M / beta_masses['g'])
-    #     )  
-    #     + 0.36 * np.exp(-M / beta_masses['w'])
-    #     + 0.18 * np.exp(-M / beta_masses['z'])
-    #     + 0.267 * np.exp(-M / beta_masses['h'])
-    # )
     return result
 
 # Define a range for M in logarithmic space
-M_values = np.logspace(9, 20, 10000)  # M values from 10^9 to 10^20
+M_values = np.logspace(0, 10, 10000)  # M values from 10^9 to 10^20
 f_values = f(M_values)
+print(f_values)
+
 
 # Plot the function using logarithmic scales
 plt.figure(figsize=(12, 8))
