@@ -10,7 +10,6 @@ G = 6.67430e-8        # cm³/g·s²
 def gev_to_grams(energy_gev):
     energy_ergs = energy_gev * 1.60218e-3
     mass_grams = energy_ergs / (c ** 2)
-    
     return mass_grams
 
 def f(M):
@@ -42,24 +41,16 @@ def f(M):
         'T': '1/2', 'b': '1/2', 't': '1/2', 'g': '1',
         'w': '1', 'z': '1', 'h': '0'
     }
-    
-    # Calculate beta masses based on the paper's values
-    # Planck mass in grams
-    planck_mass = np.sqrt(hbar * c / G)
-    
-    # beta_coefficient based on spin (these values need verification against the paper)
+
     beta_coef = {
         '0': 2.66,
         '1/2': 4.53,
         '1': 6.04,
         '2': 9.56
     }
-    
-    # Calculate beta masses for each particle
-    beta_masses = {}
-    for particle, mass in masses.items():
-        spin = spins[particle]
-        beta_masses[particle] = (planck_mass**2 * beta_coef[spin]) / mass
+
+    def beta_masses(particle):
+        return (hbar * c) / (8 * math.pi * G * masses[particle]) * beta_coef[spins[particle]]
     
     # Base constant from the original equation
     base = 1.569
@@ -68,19 +59,19 @@ def f(M):
     result = (
         base
         + 0.569 * (
-            np.exp(-M / beta_masses['mu'])
-            + 3 * np.exp(-M / beta_masses['u'])
-            + 3 * np.exp(-M / beta_masses['d'])
-            + 3 * np.exp(-M / beta_masses['s'])
-            + 3 * np.exp(-M / beta_masses['c'])
-            + np.exp(-M / beta_masses['T'])
-            + 3 * np.exp(-M / beta_masses['b'])
-            + 3 * np.exp(-M / beta_masses['t'])
-            + 0.963 * np.exp(-M / beta_masses['g'])
+            np.exp(-M / beta_masses('mu'))
+            + 3 * np.exp(-M / beta_masses('u'))
+            + 3 * np.exp(-M / beta_masses('d'))
+            + 3 * np.exp(-M / beta_masses('s'))
+            + 3 * np.exp(-M / beta_masses('c'))
+            + np.exp(-M / beta_masses('T'))
+            + 3 * np.exp(-M / beta_masses('b'))
+            + 3 * np.exp(-M / beta_masses('t'))
+            + 0.963 * np.exp(-M / beta_masses('g'))
         )  
-        + 0.36 * np.exp(-M / beta_masses['w'])
-        + 0.18 * np.exp(-M / beta_masses['z'])
-        + 0.267 * np.exp(-M / beta_masses['h'])
+        + 0.36 * np.exp(-M / beta_masses('w'))
+        + 0.18 * np.exp(-M / beta_masses('z'))
+        + 0.267 * np.exp(-M / beta_masses('h'))
     )
     return result
 
