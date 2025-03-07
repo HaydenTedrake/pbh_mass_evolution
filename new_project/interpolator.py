@@ -5,13 +5,23 @@ import matplotlib.pyplot as plt
 
 # List of energy levels and corresponding .bin files
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
-bin_files = ["new_project/bin_files/bigSolution4-1.bin", "new_project/bin_files/bigSolution4-2.bin", "new_project/bin_files/bigSolution4-3.bin", "new_project/bin_files/bigSolution4-4.bin", "new_project/bin_files/bigSolution4-5.bin", "new_project/bin_files/bigSolution4-6.bin", "new_project/bin_files/bigSolution4-7.bin", "new_project/bin_files/bigSolution4-8.bin", "new_project/bin_files/bigSolution4-10.bin", "new_project/bin_files/bigSolution4-11.bin", "new_project/bin_files/bigSolution4-12.bin", "new_project/bin_files/bigSolution4-13.bin", "new_project/bin_files/bigSolution4-14.bin", "new_project/bin_files/bigSolution4-15.bin", "new_project/bin_files/bigSolution4-16.bin"]
+bin_files = ["new_project/bin/bigSolution3-1.bin", "new_project/bin/bigSolution3-2.bin", "new_project/bin/bigSolution3-3.bin", "new_project/bin/bigSolution3-4.bin", "new_project/bin/bigSolution3-5.bin", "new_project/bin/bigSolution3-6.bin", "new_project/bin/bigSolution3-7.bin", "new_project/bin/bigSolution3-8.bin", "new_project/bin/bigSolution3-10.bin", "new_project/bin/bigSolution3-11.bin", "new_project/bin/bigSolution3-12.bin", "new_project/bin/bigSolution3-13.bin", "new_project/bin/bigSolution3-14.bin", "new_project/bin/bigSolution3-15.bin", "new_project/bin/bigSolution3-16.bin"]
 
 # Dictionary to store interpolators for each energy
 interpolators = {}
 
+# Define the logarithmic part for t_values from -10,000 to 0
+num_log_points = 500  # Adjust to control density near 0
+log_t_values = -np.logspace(0, 4, num=num_log_points, base=10)[::-1]  # More points near 0
+
+# Define the linear part for t_values from 0 to 10,000 with steps of 10
+linear_t_values = np.arange(0, 10001, 100)
+
+# Combine both parts
+t_values = np.concatenate((log_t_values, linear_t_values))
+
 # Define the grid
-t_values = np.arange(-10000, 10001, 10)  # t from -10,000 to 10,000 in steps of 10
+# t_values = np.arange(-10000, 10001, 10)  # t from -10,000 to 10,000 in steps of 10
 x_values = np.arange(-10, 11, 2)         # x from -10 to 10 in steps of 2
 y_values = np.arange(-10, 11, 2)         # y from -10 to 10 in steps of 2
 z_values = np.arange(-10, 11, 2)         # z from -10 to 10 in steps of 2
