@@ -3,6 +3,7 @@ from scipy.interpolate import RegularGridInterpolator
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+
 # ---------------------------------------
 # BUILDING THE INTERPOLATORS / FIRST PLOT
 # ---------------------------------------
@@ -107,7 +108,7 @@ plt.show()
 # -----------
 
 specific_energies = [100, 316.228, 1000]
-specific_t_values = [0, 1000, 10000]
+specific_t_values = [0, 1000, 3000, 5000]
 
 X, Y = np.meshgrid(x_values, y_values)
 
@@ -127,4 +128,66 @@ for E in specific_energies:
         plt.title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)")
         plt.xlabel("X Coordinate")
         plt.ylabel("Y Coordinate")
+        plt.show()
+
+# ------------
+# GRADIENT MAP
+# ------------
+
+def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
+    """
+    Computes the numerical gradient of the interpolated function at (t, x, y, z),
+    ensuring that all perturbed points remain within the interpolation grid bounds.
+
+    Returns a tuple of (∂u/∂t, ∂u/∂x, ∂u/∂y, ∂u/∂z).
+    """
+    def safe_query(var, grid):
+        """Ensures the queried value stays within the valid grid range."""
+        return np.clip(var, grid[0] + delta, grid[-1] - delta)
+
+    # Ensure points stay in bounds
+    t_p, t_m = safe_query(t + delta, t_values), safe_query(t - delta, t_values)
+    x_p, x_m = safe_query(x + delta, x_values), safe_query(x - delta, x_values)
+    y_p, y_m = safe_query(y + delta, y_values), safe_query(y - delta, y_values)
+    z_p, z_m = safe_query(z + delta, z_values), safe_query(z - delta, z_values)
+
+    # Compute numerical gradients
+    dt = (interpolator([[t_p, x, y, z]]) - interpolator([[t_m, x, y, z]])) / (2 * delta)
+    dx = (interpolator([[t, x_p, y, z]]) - interpolator([[t, x_m, y, z]])) / (2 * delta)
+    dy = (interpolator([[t, x, y_p, z]]) - interpolator([[t, x, y_m, z]])) / (2 * delta)
+    dz = (interpolator([[t, x, y, z_p]]) - interpolator([[t, x, y, z_m]])) / (2 * delta)
+
+    return (dt[0], dx[0], dy[0], dz[0])
+
+# Generate 3D gradient vector plots for each energy level and time value
+for E in specific_energies:
+    interpolator = interpolators[E]
+
+    for t in specific_t_values:
+        fig = plt.figure(figsize=(10, 6))
+        ax = fig.add_subplot(111, projection='3d')
+
+        for x in x_values:
+            for y in y_values:
+                for z in z_values:
+                    # Compute gradient safely
+                    grad = gradient_of_interpolator_safe(interpolator, t, x, y, z)
+                    _, dx, dy, dz = grad
+
+                    # Compute magnitude of gradient
+                    grad_magnitude = np.sqrt(dx**2 + dy**2 + dz**2)
+
+                    # Adaptive scaling: Adjust length based on the gradient magnitude
+                    scale_factor = 2 / (grad_magnitude + 1e-6)  # Prevent division by zero
+
+                    # Plot arrows with adaptive scaling
+                    ax.quiver(x, y, z, dx, dy, dz, length=scale_factor, color="blue")
+
+        # Labels and title for the specific energy and time
+        ax.set_xlabel("X Coordinate")
+        ax.set_ylabel("Y Coordinate")
+        ax.set_zlabel("Z Coordinate")
+        ax.set_title(f"3D Gradient Field at E={E} GeV, t={t}")
+
+        # Show plot for each time step separately
         plt.show()
