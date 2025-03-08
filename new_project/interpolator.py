@@ -113,22 +113,28 @@ specific_t_values = [0, 1000, 3000, 5000]
 X, Y = np.meshgrid(x_values, y_values)
 
 for E in specific_energies:
-    for t in specific_t_values:
+    fig, axes = plt.subplots(2, 2, figsize=(10, 10))  # Create a 2x2 grid
+
+    for i, t in enumerate(specific_t_values):
+        row, col = divmod(i, 2)  # Compute row and column index for 2x2 layout
+
         # Evaluate interpolator at fixed z = 0 for all (x, y)
         u_values = np.array([
             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
             for x in x_values] for y in y_values
-    ])
+        ])
 
-        # Create contour plot
-        plt.figure(figsize=(6, 5))
-        contour = plt.contourf(X, Y, u_values, cmap='viridis')
-        plt.colorbar(contour)
-        plt.title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)")
-        plt.xlabel("X Coordinate")
-        plt.ylabel("Y Coordinate")
-        plt.show()
+        # Create subplot contour plot
+        ax = axes[row, col]
+        contour = ax.contourf(X, Y, u_values, cmap='viridis')
+        fig.colorbar(contour, ax=ax)
+        ax.set_title(f"E = {E:.3g} GeV, t = {t}, z = 0")
+        ax.set_xlabel("X Coordinate")
+        ax.set_ylabel("Y Coordinate")
+
+    plt.tight_layout()
+    plt.show()
 
 # ------------
 # GRADIENT MAP
@@ -159,13 +165,15 @@ def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
 
     return (dt[0], dx[0], dy[0], dz[0])
 
-# Generate 3D gradient vector plots for each energy level and time value
+# Generate 3D gradient vector plots for each energy level, with subplots arranged in a 2x2 grid
 for E in specific_energies:
     interpolator = interpolators[E]
+    
+    fig, axes = plt.subplots(2, 2, figsize=(12, 12), subplot_kw={'projection': '3d'})  # 2x2 grid
 
-    for t in specific_t_values:
-        fig = plt.figure(figsize=(10, 6))
-        ax = fig.add_subplot(111, projection='3d')
+    for i, t in enumerate(specific_t_values):
+        row, col = divmod(i, 2)  # Determine subplot row and column
+        ax = axes[row, col]  # Get the corresponding subplot
 
         for x in x_values:
             for y in y_values:
@@ -187,7 +195,7 @@ for E in specific_energies:
         ax.set_xlabel("X Coordinate")
         ax.set_ylabel("Y Coordinate")
         ax.set_zlabel("Z Coordinate")
-        ax.set_title(f"3D Gradient Field at E={E} GeV, t={t}")
+        ax.set_title(f"E={E} GeV, t={t}")
 
-        # Show plot for each time step separately
-        plt.show()
+    plt.tight_layout()
+    plt.show()
