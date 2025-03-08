@@ -3,10 +3,9 @@ from scipy.interpolate import RegularGridInterpolator
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-
-# ---------------------------------------
-# BUILDING THE INTERPOLATORS / FIRST PLOT
-# ---------------------------------------
+# --------------------------------------------
+# BUILDING THE INTERPOLATORS / DENSITY VS TIME
+# --------------------------------------------
 
 # List of energy levels and corresponding .bin files
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
@@ -58,6 +57,10 @@ plt.ylabel("Density")
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+# ---------------
+# ENERGY SPECTRUM
+# ---------------
 
 # integrated_spectrum = []
 
