@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 
 # --------------------------------------------
 # BUILDING THE INTERPOLATORS / DENSITY VS TIME
@@ -52,7 +53,7 @@ for E in energy_levels:
 
     # Plot
     ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
-    
+
 ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
 ax.set_xlabel("Time", fontsize=24)
 ax.set_ylabel("Density", fontsize=24)
@@ -116,6 +117,9 @@ plt.show()
 # CONTOUR MAP
 # -----------
 
+colors = ['indigo', 'blue', 'green', 'yellow', 'orange', 'red']
+custom_cmap = LinearSegmentedColormap.from_list("indigo_to_red", colors, N=256)
+
 specific_energies = [100, 316.228, 1000]
 specific_t_values = [0, 1000, 3000, 5000]
  
@@ -128,11 +132,11 @@ for E in specific_energies:
             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
             for x in x_values] for y in y_values
-    ])
+        ])
  
         # Create contour plot
         plt.figure(figsize=(6, 5))
-        contour = plt.contourf(X, Y, u_values, cmap='viridis')
+        contour = plt.contourf(X, Y, u_values, cmap=custom_cmap)
         plt.colorbar(contour)
         plt.title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)")
         plt.xlabel("X Coordinate")
@@ -192,7 +196,7 @@ for E in specific_energies:
         # Labels and title for the specific energy and time
         ax.set_xlabel("X Coordinate")
         ax.set_ylabel("Y Coordinate")
-        ax.set_title(f"2D Gradient Field at E={E} GeV, t={t}, z=0")
+        ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0")
  
         # Show plot for each time step separately
         plt.show()
