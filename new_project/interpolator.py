@@ -133,27 +133,34 @@ specific_t_values = [0, 1000, 3000, 5000]
  
 X, Y = np.meshgrid(new_x_values, new_y_values)
  
-for E in specific_energies:
-    for t in specific_t_values:
-        # Evaluate interpolator at fixed z = 0 for all (x, y)
-        u_values = np.array([
-            [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
-            else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
-            for x in new_x_values] for y in new_y_values
-        ])
+# for E in specific_energies:
+#     for t in specific_t_values:
+#         fig, ax = plt.subplots(figsize=(12, 8))
+#         # Evaluate interpolator at fixed z = 0 for all (x, y)
+#         u_values = np.array([
+#             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
+#             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
+#             for x in new_x_values] for y in new_y_values
+#         ])
  
-        # Create contour plot
-        plt.figure(figsize=(6, 5))
-        contour = plt.contourf(X, Y, u_values, cmap=custom_cmap)
-        plt.colorbar(contour)
-        plt.title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)")
-        plt.xlabel("X Coordinate")
-        plt.ylabel("Y Coordinate")
-        plt.show()
+#         # Create contour plot
+#         contour = ax.contourf(X, Y, u_values, cmap=custom_cmap)
+#         cbar = fig.colorbar(contour)
+#         cbar.ax.tick_params(labelsize=18)  
+#         cbar.ax.yaxis.get_offset_text().set_fontsize(20)
+#         ax.grid(False)
+#         ax.set_title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)", fontsize=26)
+#         ax.set_xlabel("X Coordinate", fontsize=24)
+#         ax.set_ylabel("Y Coordinate", fontsize=24)
+#         ax.tick_params(axis='both', which='major', labelsize=18)
+#         plt.tight_layout()
+#         plt.show()
  
 # ------------
 # GRADIENT MAP
 # ------------
+
+X, Y = np.meshgrid(x_values, y_values)
 
 def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
     """
@@ -202,9 +209,9 @@ for E in specific_energies:
         ax.quiver(X, Y, U, V, scale=20, color='blue')
         
         # Labels and title for the specific energy and time
-        ax.set_xlabel("X Coordinate")
-        ax.set_ylabel("Y Coordinate")
-        ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0")
- 
-        # Show plot for each time step separately
+        ax.set_xlabel("X Coordinate", fontsize=24)
+        ax.set_ylabel("Y Coordinate", fontsize=24)
+        ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0", fontsize=26)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        plt.tight_layout()
         plt.show()
