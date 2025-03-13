@@ -21,7 +21,7 @@ y_values = np.arange(-10, 11, 2)         # y from -10 to 10 in steps of 2
 z_values = np.arange(-10, 11, 2)         # z from -10 to 10 in steps of 2
 
 # Prepare a figure
-plt.figure(figsize=(10, 6))
+# plt.figure(figsize=(10, 6))
 
 # Iterate over energy levels and construct interpolators with a progress bar
 for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), desc="Building Interpolators"):
@@ -43,18 +43,24 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
 # plt.show()
 # exit()
 
+fig, ax = plt.subplots(figsize=(12, 8))
+
 # Evaluate and plot for each energy
 for E in energy_levels:
     # Interpolate values at (t, x, y, z)
     values = interpolators[E]([[t, 0, 0, 0.01] for t in t_values])
 
     # Plot
-    plt.plot(t_values, values, label=f"E = {E:.3g} GeV")
+    ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
     
-plt.title("Density vs. Time for each Energy (x=0, y=0, z=0.01)")
-plt.xlabel("Time")
-plt.ylabel("Density")
-plt.legend()
+ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
+ax.set_xlabel("Time", fontsize=24)
+ax.set_ylabel("Density", fontsize=24)
+
+ax.tick_params(axis='both', which='major', labelsize=18)
+ax.grid(True)
+ax.legend(fontsize=20, loc = "upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0.5)
+ax.yaxis.get_offset_text().set_fontsize(18)
 plt.tight_layout()
 plt.show()
 
@@ -112,33 +118,27 @@ plt.show()
 
 specific_energies = [100, 316.228, 1000]
 specific_t_values = [0, 1000, 3000, 5000]
-
+ 
 X, Y = np.meshgrid(x_values, y_values)
-
+ 
 for E in specific_energies:
-    fig, axes = plt.subplots(2, 2, figsize=(10, 10))  # Create a 2x2 grid
-
-    for i, t in enumerate(specific_t_values):
-        row, col = divmod(i, 2)  # Compute row and column index for 2x2 layout
-
-        # Evaluate interpolator at fixed z = 0 for all (x, y)
-        u_values = np.array([
-            [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
-            else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
-            for x in x_values] for y in y_values
-        ])
-
-        # Create subplot contour plot
-        ax = axes[row, col]
-        contour = ax.contourf(X, Y, u_values, cmap='viridis')
-        fig.colorbar(contour, ax=ax)
-        ax.set_title(f"E = {E:.3g} GeV, t = {t}, z = 0")
-        ax.set_xlabel("X Coordinate")
-        ax.set_ylabel("Y Coordinate")
-
-    plt.tight_layout()
-    plt.show()
-
+    for t in specific_t_values:
+         # Evaluate interpolator at fixed z = 0 for all (x, y)
+         u_values = np.array([
+             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
+             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
+             for x in x_values] for y in y_values
+     ])
+ 
+         # Create contour plot
+         plt.figure(figsize=(6, 5))
+         contour = plt.contourf(X, Y, u_values, cmap='viridis')
+         plt.colorbar(contour)
+         plt.title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)")
+         plt.xlabel("X Coordinate")
+         plt.ylabel("Y Coordinate")
+         plt.show()
+ 
 # ------------
 # GRADIENT MAP
 # ------------
@@ -151,54 +151,52 @@ def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
     Returns a tuple of (∂u/∂t, ∂u/∂x, ∂u/∂y, ∂u/∂z).
     """
     def safe_query(var, grid):
-        """Ensures the queried value stays within the valid grid range."""
-        return np.clip(var, grid[0] + delta, grid[-1] - delta)
-
-    # Ensure points stay in bounds
+         """Ensures the queried value stays within the valid grid range."""
+         return np.clip(var, grid[0] + delta, grid[-1] - delta)
+ 
+     # Ensure points stay in bounds
     t_p, t_m = safe_query(t + delta, t_values), safe_query(t - delta, t_values)
     x_p, x_m = safe_query(x + delta, x_values), safe_query(x - delta, x_values)
     y_p, y_m = safe_query(y + delta, y_values), safe_query(y - delta, y_values)
     z_p, z_m = safe_query(z + delta, z_values), safe_query(z - delta, z_values)
-
-    # Compute numerical gradients
+ 
+     # Compute numerical gradients
     dt = (interpolator([[t_p, x, y, z]]) - interpolator([[t_m, x, y, z]])) / (2 * delta)
     dx = (interpolator([[t, x_p, y, z]]) - interpolator([[t, x_m, y, z]])) / (2 * delta)
     dy = (interpolator([[t, x, y_p, z]]) - interpolator([[t, x, y_m, z]])) / (2 * delta)
     dz = (interpolator([[t, x, y, z_p]]) - interpolator([[t, x, y, z_m]])) / (2 * delta)
-
+ 
     return (dt[0], dx[0], dy[0], dz[0])
-
-# Generate 3D gradient vector plots for each energy level, with subplots arranged in a 2x2 grid
+ 
+ # Generate 3D gradient vector plots for each energy level and time value
 for E in specific_energies:
-    interpolator = interpolators[E]
-    
-    fig, axes = plt.subplots(2, 2, figsize=(12, 12), subplot_kw={'projection': '3d'})  # 2x2 grid
-
-    for i, t in enumerate(specific_t_values):
-        row, col = divmod(i, 2)  # Determine subplot row and column
-        ax = axes[row, col]  # Get the corresponding subplot
-
-        for x in x_values:
-            for y in y_values:
-                for z in z_values:
-                    # Compute gradient safely
-                    grad = gradient_of_interpolator_safe(interpolator, t, x, y, z)
-                    _, dx, dy, dz = grad
-
-                    # Compute magnitude of gradient
-                    grad_magnitude = np.sqrt(dx**2 + dy**2 + dz**2)
-
-                    # Adaptive scaling: Adjust length based on the gradient magnitude
-                    scale_factor = 2 / (grad_magnitude + 1e-6)  # Prevent division by zero
-
-                    # Plot arrows with adaptive scaling
-                    ax.quiver(x, y, z, dx, dy, dz, length=scale_factor, color="blue")
-
-        # Labels and title for the specific energy and time
-        ax.set_xlabel("X Coordinate")
-        ax.set_ylabel("Y Coordinate")
-        ax.set_zlabel("Z Coordinate")
-        ax.set_title(f"E={E} GeV, t={t}")
-
-    plt.tight_layout()
-    plt.show()
+     interpolator = interpolators[E]
+ 
+     for t in specific_t_values:
+         fig = plt.figure(figsize=(10, 6))
+         ax = fig.add_subplot(111, projection='3d')
+ 
+         for x in x_values:
+             for y in y_values:
+                 for z in z_values:
+                     # Compute gradient safely
+                     grad = gradient_of_interpolator_safe(interpolator, t, x, y, z)
+                     _, dx, dy, dz = grad
+ 
+                     # Compute magnitude of gradient
+                     grad_magnitude = np.sqrt(dx**2 + dy**2 + dz**2)
+ 
+                     # Adaptive scaling: Adjust length based on the gradient magnitude
+                     scale_factor = 2 / (grad_magnitude + 1e-6)  # Prevent division by zero
+ 
+                     # Plot arrows with adaptive scaling
+                     ax.quiver(x, y, z, dx, dy, dz, length=scale_factor, color="blue")
+ 
+         # Labels and title for the specific energy and time
+         ax.set_xlabel("X Coordinate")
+         ax.set_ylabel("Y Coordinate")
+         ax.set_zlabel("Z Coordinate")
+         ax.set_title(f"3D Gradient Field at E={E} GeV, t={t}")
+ 
+         # Show plot for each time step separately
+         plt.show()
