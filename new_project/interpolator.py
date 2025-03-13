@@ -98,18 +98,26 @@ plt.show()
 # PLOT ALONG X-AXIS
 # -----------------
 
+new_x_values = np.arange(-10, 10.1, 0.1)
+new_y_values = np.arange(-10, 10.1, 0.1)
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
 # Evaluate and plot for each energy
 for E in energy_levels:
     # Interpolate values at (t, x, y, z)
-    values = interpolators[E]([[0, x, 0, 0] for x in x_values])
-
+    values = interpolators[E]([[0, x, 0, 0] for x in new_x_values])
     # Plot
-    plt.plot(x_values, values, label=f"E = {E:.3g} GeV")
+    ax.plot(new_x_values, values, label=f"E = {E:.3g} GeV")
     
-plt.title("Density vs. X for each Energy (t=0, y=0, z=0)")
-plt.xlabel("X Coordinate")
-plt.ylabel("Density")
-plt.legend()
+ax.set_title("Density vs. X for each Energy (t=0, y=0, z=0)", fontsize=26)
+ax.set_xlabel("X Coordinate", fontsize=24)
+ax.set_ylabel("Density", fontsize=24)
+
+ax.tick_params(axis='both', which='major', labelsize=18)
+ax.grid(True)
+ax.legend(fontsize=20, loc = "upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0.5)
+ax.yaxis.get_offset_text().set_fontsize(18)
 plt.tight_layout()
 plt.show()
 
@@ -123,7 +131,7 @@ custom_cmap = LinearSegmentedColormap.from_list("indigo_to_red", colors, N=256)
 specific_energies = [100, 316.228, 1000]
 specific_t_values = [0, 1000, 3000, 5000]
  
-X, Y = np.meshgrid(x_values, y_values)
+X, Y = np.meshgrid(new_x_values, new_y_values)
  
 for E in specific_energies:
     for t in specific_t_values:
@@ -131,7 +139,7 @@ for E in specific_energies:
         u_values = np.array([
             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
-            for x in x_values] for y in y_values
+            for x in new_x_values] for y in new_y_values
         ])
  
         # Create contour plot
