@@ -4,7 +4,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.animation as animation
-import os
 
 # --------------------------------------------
 # BUILDING THE INTERPOLATORS / DENSITY VS TIME
@@ -158,59 +157,6 @@ X, Y = np.meshgrid(new_x_values, new_y_values)
 #         ax.tick_params(axis='both', which='major', labelsize=18)
 #         plt.tight_layout()
 #         plt.show()
-
-# -------------
-# CONTOUR MOVIE
-# -------------
-
-# Ensure the output directory exists
-output_dir = "new_project"
-os.makedirs(output_dir, exist_ok=True)
-
-# Generate and save frames for each energy level
-for E in specific_energies:
-    energy_dir = f"{output_dir}/E_{E:.3g}"
-    os.makedirs(energy_dir, exist_ok=True)
-    image_filenames = []
-    
-    for t in specific_t_values:
-        fig, ax = plt.subplots(figsize=(12, 8))
-        ax.set_title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)", fontsize=20)
-        
-        # Evaluate interpolator at fixed z = 0 for all (x, y)
-        u_values = np.array([
-            [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
-            else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
-            for x in new_x_values] for y in new_y_values
-        ])
-        
-        if u_values.shape != X.shape:
-            print(f"Shape mismatch: u_values {u_values.shape}, X {X.shape}")
-            continue
-        
-        # Create contour plot
-        contour = ax.contourf(X, Y, u_values, cmap=custom_cmap, levels=20)
-        
-        # Add color bar
-        cbar = fig.colorbar(contour, ax=ax, shrink=0.8, pad=0.05)
-        cbar.ax.tick_params(labelsize=14)
-        cbar.ax.yaxis.get_offset_text().set_fontsize(16)
-        
-        ax.set_xlabel("X Coordinate", fontsize=18)
-        ax.set_ylabel("Y Coordinate", fontsize=18)
-        ax.tick_params(axis='both', which='major', labelsize=14)
-        
-        plt.tight_layout()
-        
-        # Save frame as an image
-        filename = f"{energy_dir}/contour_E{E:.3g}_t{t}.png"
-        plt.savefig(filename)
-        image_filenames.append(filename)
-        plt.close(fig)
-    
-    # Create movie from images for this energy level
-    frames = [Image.open(img) for img in image_filenames]
-    frames[0].save(f"{energy_dir}/contour_movie_E{E:.3g}.mp4", save_all=True, append_images=frames[1:], duration=200, loop=0)
  
 # ------------
 # GRADIENT MAP
