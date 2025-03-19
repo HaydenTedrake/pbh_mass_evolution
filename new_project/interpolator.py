@@ -40,7 +40,7 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
     # plt.plot(t_values, data[:, 5, 5, 6], label=f"E = {E:.3g} GeV")
 
     # Create and store 4D interpolator
-    interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data)
+    interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data, method='linear', bounds_error=False, fill_value=None)
 
 # plt.show()
 # exit()
@@ -130,33 +130,34 @@ colors = ['indigo', 'blue', 'green', 'yellow', 'orange', 'red']
 custom_cmap = LinearSegmentedColormap.from_list("indigo_to_red", colors, N=256)
 
 specific_energies = [100, 316.228, 1000]
-# specific_t_values = [0, 1000, 3000, 5000]
-specific_t_values = np.arange(-200, 1201, 100)
+specific_t_values = [0, 1000, 3000, 5000]
+
+new_x_values2 = np.linspace(-10, 10, 200)  # 400 points instead of 11
+new_y_values2 = np.linspace(-10, 10, 200)
+X, Y = np.meshgrid(new_x_values2, new_y_values2)
+
+for E in specific_energies:
+    for t in specific_t_values:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        # Evaluate interpolator at fixed z = 0 for all (x, y)
+        u_values = np.array([
+            [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
+            else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
+            for x in new_x_values2] for y in new_y_values2
+        ])
  
-X, Y = np.meshgrid(new_x_values, new_y_values)
- 
-# for E in specific_energies:
-#     for t in specific_t_values:
-#         fig, ax = plt.subplots(figsize=(12, 8))
-#         # Evaluate interpolator at fixed z = 0 for all (x, y)
-#         u_values = np.array([
-#             [interpolators[E]([t, x, y, 0])[0] if isinstance(interpolators[E]([t, x, y, 0]), np.ndarray) 
-#             else interpolators[E]([t, x, y, 0])  # Ensure a scalar value
-#             for x in new_x_values] for y in new_y_values
-#         ])
- 
-#         # Create contour plot
-#         contour = ax.contourf(X, Y, u_values, cmap=custom_cmap)
-#         cbar = fig.colorbar(contour)
-#         cbar.ax.tick_params(labelsize=18)  
-#         cbar.ax.yaxis.get_offset_text().set_fontsize(20)
-#         ax.grid(False)
-#         ax.set_title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)", fontsize=26)
-#         ax.set_xlabel("X Coordinate", fontsize=24)
-#         ax.set_ylabel("Y Coordinate", fontsize=24)
-#         ax.tick_params(axis='both', which='major', labelsize=18)
-#         plt.tight_layout()
-#         plt.show()
+        # Create contour plot
+        contour = ax.contourf(X, Y, u_values, cmap=custom_cmap)
+        cbar = fig.colorbar(contour)
+        cbar.ax.tick_params(labelsize=18)  
+        cbar.ax.yaxis.get_offset_text().set_fontsize(20)
+        ax.grid(False)
+        ax.set_title(f"Contour Map (E = {E:.3g} GeV, t = {t}, z = 0)", fontsize=26)
+        ax.set_xlabel("X Coordinate", fontsize=24)
+        ax.set_ylabel("Y Coordinate", fontsize=24)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        plt.tight_layout()
+        plt.show()
  
 # ------------
 # GRADIENT MAP
@@ -185,42 +186,44 @@ def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
 
     return (dx[0], dy[0])
  
-#  # Generate 3D gradient vector plots for each energy level and time value
-# for E in specific_energies:
-#      interpolator = interpolators[E]
+ # Generate 3D gradient vector plots for each energy level and time value
+for E in specific_energies:
+     interpolator = interpolators[E]
  
-#      for t in specific_t_values:
-#         fig, ax = plt.subplots(figsize=(10, 6))
+     for t in specific_t_values:
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-#         U = np.zeros_like(X, dtype=float)
-#         V = np.zeros_like(Y, dtype=float)
+        U = np.zeros_like(X, dtype=float)
+        V = np.zeros_like(Y, dtype=float)
  
-#         for i in range(X.shape[0]):
-#             for j in range(X.shape[1]):
-#                 x, y, = X[i, j], Y[i, j]
-#                 dx, dy = gradient_of_interpolator_safe(interpolator, t, x, y, 0)
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                x, y, = X[i, j], Y[i, j]
+                dx, dy = gradient_of_interpolator_safe(interpolator, t, x, y, 0)
 
-#                 U[i, j], V[i, j] = dx, dy 
+                U[i, j], V[i, j] = dx, dy 
         
-#         # Normalize arrows for better visualization
-#         magnitude = np.sqrt(U**2 + V**2)
-#         U /= (magnitude + 1e-9)
-#         V /= (magnitude + 1e-9)
+        # Normalize arrows for better visualization
+        magnitude = np.sqrt(U**2 + V**2)
+        U /= (magnitude + 1e-9)
+        V /= (magnitude + 1e-9)
         
-#         # Plot the arrows
-#         ax.quiver(X, Y, U, V, scale=20, color='blue')
+        # Plot the arrows
+        ax.quiver(X, Y, U, V, scale=20, color='blue')
         
-#         # Labels and title for the specific energy and time
-#         ax.set_xlabel("X Coordinate", fontsize=24)
-#         ax.set_ylabel("Y Coordinate", fontsize=24)
-#         ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0", fontsize=26)
-#         ax.tick_params(axis='both', which='major', labelsize=18)
-#         plt.tight_layout()
-#         plt.show()
+        # Labels and title for the specific energy and time
+        ax.set_xlabel("X Coordinate", fontsize=24)
+        ax.set_ylabel("Y Coordinate", fontsize=24)
+        ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0", fontsize=26)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        plt.tight_layout()
+        plt.show()
 
 # --------------
 # GRADIENT MOVIE
 # --------------
+
+specific_t_values2 = np.arange(-200, 1201, 100)
 
 for E in specific_energies:
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -256,7 +259,7 @@ for E in specific_energies:
         return ax
     
     # Generate animation
-    ani = animation.FuncAnimation(fig, update, frames=specific_t_values, repeat=False)
+    ani = animation.FuncAnimation(fig, update, frames=specific_t_values2, repeat=False)
     
     # Save animation as video
     ani.save(f"new_project/grad_E{E:.3g}.mp4", writer="ffmpeg", fps=5)
