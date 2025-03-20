@@ -132,8 +132,9 @@ custom_cmap = LinearSegmentedColormap.from_list("indigo_to_red", colors, N=256)
 specific_energies = [100, 316.228, 1000]
 specific_t_values = [0, 1000, 3000, 5000]
 
-new_x_values2 = np.linspace(-10, 10, 200)  # 400 points instead of 11
+new_x_values2 = np.linspace(-10, 10, 200)  # 200 points
 new_y_values2 = np.linspace(-10, 10, 200)
+
 X, Y = np.meshgrid(new_x_values2, new_y_values2)
 
 for E in specific_energies:
@@ -186,38 +187,38 @@ def gradient_of_interpolator_safe(interpolator, t, x, y, z, delta=1e-3):
 
     return (dx[0], dy[0])
  
- # Generate 3D gradient vector plots for each energy level and time value
-for E in specific_energies:
-     interpolator = interpolators[E]
+#  # Generate 3D gradient vector plots for each energy level and time value
+# for E in specific_energies:
+#      interpolator = interpolators[E]
  
-     for t in specific_t_values:
-        fig, ax = plt.subplots(figsize=(10, 6))
+#      for t in specific_t_values:
+#         fig, ax = plt.subplots(figsize=(10, 6))
 
-        U = np.zeros_like(X, dtype=float)
-        V = np.zeros_like(Y, dtype=float)
+#         U = np.zeros_like(X, dtype=float)
+#         V = np.zeros_like(Y, dtype=float)
  
-        for i in range(X.shape[0]):
-            for j in range(X.shape[1]):
-                x, y, = X[i, j], Y[i, j]
-                dx, dy = gradient_of_interpolator_safe(interpolator, t, x, y, 0)
+#         for i in range(X.shape[0]):
+#             for j in range(X.shape[1]):
+#                 x, y, = X[i, j], Y[i, j]
+#                 dx, dy = gradient_of_interpolator_safe(interpolator, t, x, y, 0)
 
-                U[i, j], V[i, j] = dx, dy 
+#                 U[i, j], V[i, j] = dx, dy 
         
-        # Normalize arrows for better visualization
-        magnitude = np.sqrt(U**2 + V**2)
-        U /= (magnitude + 1e-9)
-        V /= (magnitude + 1e-9)
+#         # Normalize arrows for better visualization
+#         magnitude = np.sqrt(U**2 + V**2)
+#         U /= (magnitude + 1e-9)
+#         V /= (magnitude + 1e-9)
         
-        # Plot the arrows
-        ax.quiver(X, Y, U, V, scale=20, color='blue')
+#         # Plot the arrows
+#         ax.quiver(X, Y, U, V, scale=20, color='blue')
         
-        # Labels and title for the specific energy and time
-        ax.set_xlabel("X Coordinate", fontsize=24)
-        ax.set_ylabel("Y Coordinate", fontsize=24)
-        ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0", fontsize=26)
-        ax.tick_params(axis='both', which='major', labelsize=18)
-        plt.tight_layout()
-        plt.show()
+#         # Labels and title for the specific energy and time
+#         ax.set_xlabel("X Coordinate", fontsize=24)
+#         ax.set_ylabel("Y Coordinate", fontsize=24)
+#         ax.set_title(f"2D Gradient Field at E={E:.3g} GeV, t={t}, z=0", fontsize=26)
+#         ax.tick_params(axis='both', which='major', labelsize=18)
+#         plt.tight_layout()
+#         plt.show()
 
 # --------------
 # GRADIENT MOVIE
