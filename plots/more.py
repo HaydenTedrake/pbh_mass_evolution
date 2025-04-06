@@ -106,19 +106,19 @@ specific_t_values1 = np.arange(0, 5001, 1000)
 for E in specific_energies:
     interp = interpolators[E]
     
-    fig, ax = plt.subplots(figsize=(12, 8))
-    
     for t in specific_t_values1:
-        # Get density u along the x-axis at time t and fixed y, z
+        # Get density along x-axis at fixed y=0, z=0.01
         values = [interp((t, x, 0, 0.01)) for x in specific_x_values]
-        ax.plot(specific_x_values, values, label=f"t = {t} days")
-    
-    ax.set_title(f"Density vs. x at Various Times (E = {E} GeV, y=0, z=0.01)", fontsize=26)
-    ax.set_xlabel("x", fontsize=24)
-    ax.set_ylabel("Density u", fontsize=24)
-    ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.grid(True)
-    ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.05, 1))
-    ax.yaxis.get_offset_text().set_fontsize(18)
-    plt.tight_layout()
-    plt.show()
+        
+        # Plot this single time slice
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.plot(specific_x_values, values, marker="o")
+        
+        ax.set_title(f"Density vs. x (E = {E} GeV, t = {t} days, y=0, z=0.01)", fontsize=26)
+        ax.set_xlabel("x", fontsize=24)
+        ax.set_ylabel("Density u", fontsize=24)
+        ax.tick_params(axis='both', which='major', labelsize=18)
+        ax.grid(True)
+        ax.yaxis.get_offset_text().set_fontsize(18)
+        plt.tight_layout()
+        plt.show()
