@@ -102,6 +102,7 @@ plt.show()
 specific_energies = [100, 316.228, 1000]
 specific_x_values = np.arange(-10, 11, 2)
 specific_t_values1 = np.arange(0, 5001, 1000)
+print('hi')
 
 for E in specific_energies:
     interp = interpolators[E]
