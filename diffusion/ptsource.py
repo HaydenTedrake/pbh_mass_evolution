@@ -70,3 +70,16 @@ def update(frame):
 
 ani = animation.FuncAnimation(fig, update, frames=steps, interval=100, blit=False)
 plt.show()
+
+# Plot source functions
+ts = np.linspace(0, total_time, 200)
+for kind in ["log", "power", "impulse"]:
+    values = [source_function(t, kind=kind, alpha=2) for t in ts]
+    plt.plot(ts, values, label=kind)
+
+plt.xlabel("Time")
+plt.ylabel("Source Strength")
+plt.title("Source Functions Over Time")
+plt.legend()
+plt.grid(True)
+plt.show()
