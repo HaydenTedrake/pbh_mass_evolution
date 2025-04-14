@@ -11,7 +11,7 @@ import matplotlib.animation as animation
 
 # List of energy levels and corresponding .bin files
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
-bin_files = ["plots/bin(1)/bigSolution11-1.bin", "plots/bin(1)/bigSolution11-2.bin", "plots/bin(1)/bigSolution11-3.bin", "plots/bin(1)/bigSolution11-4.bin", "plots/bin(1)/bigSolution11-5.bin", "plots/bin(1)/bigSolution11-6.bin", "plots/bin(1)/bigSolution11-7.bin", "plots/bin(1)/bigSolution11-8.bin", "plots/bin(1)/bigSolution11-10.bin", "plots/bin(1)/bigSolution11-11.bin", "plots/bin(1)/bigSolution11-12.bin", "plots/bin(1)/bigSolution11-13.bin", "plots/bin(1)/bigSolution11-14.bin", "plots/bin(1)/bigSolution11-15.bin", "plots/bin(1)/bigSolution11-16.bin"]
+bin_files = ["plots/bin(1)/bigSolution12-1.bin", "plots/bin(1)/bigSolution12-2.bin", "plots/bin(1)/bigSolution12-3.bin", "plots/bin(1)/bigSolution12-4.bin", "plots/bin(1)/bigSolution12-5.bin", "plots/bin(1)/bigSolution12-6.bin", "plots/bin(1)/bigSolution12-7.bin", "plots/bin(1)/bigSolution12-8.bin", "plots/bin(1)/bigSolution12-10.bin", "plots/bin(1)/bigSolution12-11.bin", "plots/bin(1)/bigSolution12-12.bin", "plots/bin(1)/bigSolution12-13.bin", "plots/bin(1)/bigSolution12-14.bin", "plots/bin(1)/bigSolution12-15.bin", "plots/bin(1)/bigSolution12-16.bin"]
 
 # Dictionary to store interpolators for each energy
 interpolators = {}
