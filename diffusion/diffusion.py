@@ -28,12 +28,10 @@ def source_delta(t, t0=0.0):
 print(f"Running 3D diffusion with {N}x{N}x{N} grid...")
 
 # Create grid
-x = y = z = np.linspace(0, L, N)
 center = N//2
 
-# Initial condition (delta function)
+# Initial condition
 u = np.zeros((N, N, N))
-u[center, center, center] = 1.0/(dx**3)
 
 # 1D Laplacian with Dirichlet BCs
 diagonals = [-2*np.ones(N), np.ones(N-1), np.ones(N-1)]
