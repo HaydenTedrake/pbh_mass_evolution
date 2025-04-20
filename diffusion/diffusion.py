@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.sparse import diags, kron, eye
 from scipy.sparse.linalg import spsolve
 import time
+import matplotlib.animation as animation
 
 # Parameters
 D = 1.0       # Diffusion coefficient
@@ -45,28 +46,27 @@ u_flat = u.flatten()
 steps = int(t_final/dt)
 start_time = time.time()
 
+# Store snapshots of the center xy-plane
+snapshots = []
+timesteps = []
+
 for step in range(steps):
-    if step % 10 == 0:
-        elapsed = time.time() - start_time
-        remaining = (steps-step)*(elapsed/(step+1)) if step > 0 else 0
-        print(f"Step {step+1}/{steps} | Elapsed: {elapsed:.1f}s | Remaining: {remaining:.1f}s")
-    
     u_flat = spsolve(A, B.dot(u_flat))
+    
+    if step % 2 == 0:
+        u_snap = u_flat.reshape((N, N, N))
+        snapshots.append(u_snap[:, :, center])  # or change to desired slice
+        timesteps.append(step)
 
-print("Simulation completed!")
-u_final = u_flat.reshape((N, N, N))
+fig, ax = plt.subplots(figsize=(6, 6))
+im = ax.imshow(snapshots[0], cmap='viridis', extent=[0, L, 0, L])
+ax.set_title("Diffusion: center xy-plane")
+fig.colorbar(im)
 
-# Visualization
-plt.figure(figsize=(10, 4))
-plt.subplot(121)
-plt.imshow(u_final[center, :, :], extent=[0, L, 0, L], cmap='viridis')
-plt.colorbar()
-plt.title('yz-plane slice')
+def update(frame):
+    im.set_array(snapshots[frame])
+    ax.set_title(f"Time step {timesteps[frame]}")
+    return [im]
 
-plt.subplot(122)
-plt.imshow(u_final[:, :, center], extent=[0, L, 0, L], cmap='viridis')
-plt.colorbar()
-plt.title('xy-plane slice')
-
-plt.tight_layout()
+ani = animation.FuncAnimation(fig, update, frames=len(snapshots), interval=50, blit=False)
 plt.show()
