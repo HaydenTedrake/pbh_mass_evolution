@@ -19,7 +19,7 @@ def source_logarithmic(t):
 def source_power(t, alpha=2):
     return t**alpha
 
-def source_impulse(t, t0=5.0, width=0.1):
+def source_impulse(t, t0=0.25, width=0.01):
     return np.exp(-((t - t0)**2) / (2 * width**2))
 
 def source_delta(t, t0=0.0):
@@ -65,14 +65,14 @@ for step in range(steps):
     t = step * dt
 
     # Choose one of the source types:
-    source_type = "delta"  # change this to try others: "log", "power", "impulse"
+    source_type = "power"  # change this to try others: "log", "power", "impulse"
 
     if source_type == "log":
         source_value = source_logarithmic(t)
     elif source_type == "power":
         source_value = source_power(t, alpha=2)
     elif source_type == "impulse":
-        source_value = source_impulse(t, t0=5.0, width=0.1)
+        source_value = source_impulse(t, t0=0.25, width=0.01)
     elif source_type == "delta":
         source_value = source_delta(t, t0=0.0)
     else:
