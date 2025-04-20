@@ -13,6 +13,15 @@ dx = L/(N-1)  # Spatial step
 dt = 0.005    # Time step
 t_final = 0.5 # Final time
 
+def source_logarithmic(t):
+    return np.log1p(t)
+
+def source_power(t, alpha=2):
+    return t**alpha
+
+def source_impulse(t, t0=5.0, width=0.1):
+    return np.exp(-((t - t0)**2) / (2 * width**2))
+
 print(f"Running 3D diffusion with {N}x{N}x{N} grid...")
 
 # Create grid
@@ -43,6 +52,7 @@ B = eye(N**3, format='csc') + 0.5*dt*D*L3D
 
 # Time stepping
 u_flat = u.flatten()
+center_idx = center * N * N + center * N + center  # 1D index of the center cell
 steps = int(t_final/dt)
 start_time = time.time()
 
@@ -51,11 +61,21 @@ snapshots = []
 timesteps = []
 
 for step in range(steps):
-    u_flat = spsolve(A, B.dot(u_flat))
-    
+    t = step * dt
+
+    # Choose one of the source types:
+    source_value = source_power(t, alpha=2)  # <-- or source_logarithmic(t), etc.
+
+    source_vec = np.zeros(N**3)
+    source_vec[center_idx] = source_value / dx**3  # normalize for spatial delta
+
+    rhs = B @ u_flat + dt * source_vec  # inject source
+
+    u_flat = spsolve(A, rhs)
+
     if step % 2 == 0:
         u_snap = u_flat.reshape((N, N, N))
-        snapshots.append(u_snap[:, :, center])  # or change to desired slice
+        snapshots.append(u_snap[:, :, center])
         timesteps.append(step)
 
 fig, ax = plt.subplots(figsize=(6, 6))
