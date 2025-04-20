@@ -10,7 +10,8 @@ from tqdm import tqdm
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187,
                  794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]
 
-bin_files = [f"plots/bin(1)/bigSolution8-{i}.bin" for i in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16]]
+number = 10
+bin_files = [f"plots/bin(1)/bigSolution{number}-{i}.bin" for i in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16]]
 
 t_values = np.arange(-10000, 10001, 2)
 x_values = np.arange(-10, 11, 2)
@@ -42,7 +43,7 @@ ax1.set_xlim([-10000, 10000])
 ax1.set_ylim([1e18, 1e28])
 ax1.set_xlabel("Time (days)", fontsize=14)
 ax1.set_ylabel(r"No. density ($\mathrm{m^{-3}\,GeV^{-1}}$)", fontsize=14)
-ax1.set_title("bigSolution8", fontsize=16)
+ax1.set_title(f"bigSolution{number}", fontsize=16)
 
 # Match color-coded legend style
 ax1.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.01, 0.5), title="")
