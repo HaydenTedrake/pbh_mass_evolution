@@ -22,6 +22,9 @@ def source_power(t, alpha=2):
 def source_impulse(t, t0=5.0, width=0.1):
     return np.exp(-((t - t0)**2) / (2 * width**2))
 
+def source_delta(t, t0=0.0):
+    return 1.0 if np.isclose(t, t0, atol=1e-8) else 0.0
+
 print(f"Running 3D diffusion with {N}x{N}x{N} grid...")
 
 # Create grid
@@ -64,7 +67,18 @@ for step in range(steps):
     t = step * dt
 
     # Choose one of the source types:
-    source_value = source_power(t, alpha=2)  # <-- or source_logarithmic(t), etc.
+    source_type = "delta"  # change this to try others: "log", "power", "impulse"
+
+    if source_type == "log":
+        source_value = source_logarithmic(t)
+    elif source_type == "power":
+        source_value = source_power(t, alpha=2)
+    elif source_type == "impulse":
+        source_value = source_impulse(t, t0=5.0, width=0.1)
+    elif source_type == "delta":
+        source_value = source_delta(t, t0=0.0)
+    else:
+        source_value = 0.0
 
     source_vec = np.zeros(N**3)
     source_vec[center_idx] = source_value / dx**3  # normalize for spatial delta
