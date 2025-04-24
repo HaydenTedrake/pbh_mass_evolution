@@ -11,7 +11,7 @@ import matplotlib.animation as animation
 
 # List of energy levels and corresponding .bin files
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
-bin_files = ["plots/bin(1)/bigSolution8-1.bin", "plots/bin(1)/bigSolution8-2.bin", "plots/bin(1)/bigSolution8-3.bin", "plots/bin(1)/bigSolution8-4.bin", "plots/bin(1)/bigSolution8-5.bin", "plots/bin(1)/bigSolution8-6.bin", "plots/bin(1)/bigSolution8-7.bin", "plots/bin(1)/bigSolution8-8.bin", "plots/bin(1)/bigSolution8-10.bin", "plots/bin(1)/bigSolution8-11.bin", "plots/bin(1)/bigSolution8-12.bin", "plots/bin(1)/bigSolution8-13.bin", "plots/bin(1)/bigSolution8-14.bin", "plots/bin(1)/bigSolution8-15.bin", "plots/bin(1)/bigSolution8-16.bin"]
+bin_files = ["plots/bin(1)/bigSolution10-1.bin", "plots/bin(1)/bigSolution10-2.bin", "plots/bin(1)/bigSolution10-3.bin", "plots/bin(1)/bigSolution10-4.bin", "plots/bin(1)/bigSolution10-5.bin", "plots/bin(1)/bigSolution10-6.bin", "plots/bin(1)/bigSolution10-7.bin", "plots/bin(1)/bigSolution10-8.bin", "plots/bin(1)/bigSolution10-10.bin", "plots/bin(1)/bigSolution10-11.bin", "plots/bin(1)/bigSolution10-12.bin", "plots/bin(1)/bigSolution10-13.bin", "plots/bin(1)/bigSolution10-14.bin", "plots/bin(1)/bigSolution10-15.bin", "plots/bin(1)/bigSolution10-16.bin"]
 
 # Dictionary to store interpolators for each energy
 interpolators = {}
@@ -56,41 +56,13 @@ for E in energy_levels:
     ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
 
 ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
+ax.set_yscale("log")
 ax.set_xlabel("Time", fontsize=24)
 ax.set_ylabel("Density", fontsize=24)
 
 ax.tick_params(axis='both', which='major', labelsize=18)
 ax.grid(True)
 ax.legend(fontsize=20, loc = "upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0.5)
-ax.yaxis.get_offset_text().set_fontsize(18)
-plt.tight_layout()
-plt.show()
-
-# ---------------
-# ENERGY SPECTRUM
-# ---------------
-
-specific_t_values = np.arange(0, 10500, 500)
-
-fig, ax = plt.subplots(figsize=(12, 8))  # Same size as the time plot
-
-for t in specific_t_values:
-    spectrum = []
-    for E in energy_levels:
-        interp = interpolators[E]
-        spectrum.append(interp((t, 0, 1, 0.01)))  # Change point if needed
-
-    ax.plot(energy_levels, spectrum, marker="o", label=f"t = {t} days")
-
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlabel("Energy [GeV]", fontsize=24)
-ax.set_ylabel("Interpolated Density", fontsize=24)
-ax.set_title("Energy Spectra at Various Times (x=0, y=1, z=0.01)", fontsize=26)
-
-ax.tick_params(axis='both', which='major', labelsize=18)
-ax.grid(True)
-ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0.5)
 ax.yaxis.get_offset_text().set_fontsize(18)
 plt.tight_layout()
 plt.show()
