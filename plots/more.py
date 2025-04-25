@@ -55,6 +55,9 @@ for E in energy_levels:
     # Plot
     ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
 
+for E in energy_levels:
+    print((interpolators[E]([[9000, 0, 0, 0.01]])-interpolators[E]([[100, 0, 0, 0.01]]))/8900)
+
 ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
 ax.set_yscale("log")
 ax.set_xlabel("Time", fontsize=24)
@@ -67,31 +70,30 @@ ax.yaxis.get_offset_text().set_fontsize(18)
 plt.tight_layout()
 plt.show()
 
-# -----------------
-# PLOT ALONG X-AXIS
-# -----------------
+# # -----------------
+# # PLOT ALONG X-AXIS
+# # -----------------
 
-specific_energies = [100, 316.228, 1000]
-specific_x_values = np.arange(-10, 11, 2)
-specific_t_values1 = np.arange(0, 5001, 1000)
-print('hi')
+# specific_energies = [100, 316.228, 1000]
+# specific_x_values = np.arange(-10, 11, 2)
+# specific_t_values1 = np.arange(0, 5001, 1000)
 
-for E in specific_energies:
-    interp = interpolators[E]
+# for E in specific_energies:
+#     interp = interpolators[E]
     
-    for t in specific_t_values1:
-        # Get density along x-axis at fixed y=0, z=0.01
-        values = [interp((t, x, 0, 0.01)) for x in specific_x_values]
+#     for t in specific_t_values1:
+#         # Get density along x-axis at fixed y=0, z=0.01
+#         values = [interp((t, x, 0, 0.01)) for x in specific_x_values]
         
-        # Plot this single time slice
-        fig, ax = plt.subplots(figsize=(12, 8))
-        ax.plot(specific_x_values, values, marker="o")
+#         # Plot this single time slice
+#         fig, ax = plt.subplots(figsize=(12, 8))
+#         ax.plot(specific_x_values, values, marker="o")
         
-        ax.set_title(f"Density vs. x (E = {E} GeV, t = {t} days, y=0, z=0.01)", fontsize=26)
-        ax.set_xlabel("x", fontsize=24)
-        ax.set_ylabel("Density u", fontsize=24)
-        ax.tick_params(axis='both', which='major', labelsize=18)
-        ax.grid(True)
-        ax.yaxis.get_offset_text().set_fontsize(18)
-        plt.tight_layout()
-        plt.show()
+#         ax.set_title(f"Density vs. x (E = {E} GeV, t = {t} days, y=0, z=0.01)", fontsize=26)
+#         ax.set_xlabel("x", fontsize=24)
+#         ax.set_ylabel("Density u", fontsize=24)
+#         ax.tick_params(axis='both', which='major', labelsize=18)
+#         ax.grid(True)
+#         ax.yaxis.get_offset_text().set_fontsize(18)
+#         plt.tight_layout()
+#         plt.show()
