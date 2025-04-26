@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import interp1d
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
@@ -55,9 +56,6 @@ for E in energy_levels:
     # Plot
     ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
 
-for E in energy_levels:
-    print((interpolators[E]([[9000, 0, 0, 0.01]])-interpolators[E]([[100, 0, 0, 0.01]]))/8900)
-
 ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
 ax.set_yscale("log")
 ax.set_xlabel("Time", fontsize=24)
@@ -68,6 +66,29 @@ ax.grid(True)
 ax.legend(fontsize=20, loc = "upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0.5)
 ax.yaxis.get_offset_text().set_fontsize(18)
 plt.tight_layout()
+plt.show()
+
+# # -----
+# # SLOPE
+# # -----
+
+alpha_values = []
+for E in energy_levels:
+    val_9000 = interpolators[E]([[9000, 0, 0, 0.01]])[0]
+    val_100 = interpolators[E]([[100, 0, 0, 0.01]])[0]
+    alpha = (val_9000 - val_100) / (9000 - 100)
+    alpha_values.append(alpha)
+
+alpha_interp = interp1d(energy_levels, alpha_values, kind='linear', bounds_error=False, fill_value='extrapolate')
+
+E_dense = np.linspace(min(energy_levels), max(energy_levels), 300)
+plt.plot(energy_levels, alpha_values, 'o', label='Sampled')
+plt.plot(E_dense, alpha_interp(E_dense), '-', label='Interpolated α(E)')
+plt.xlabel('Energy (GeV)')
+plt.ylabel('Alpha')
+plt.title('Alpha as a function of Energy')
+plt.legend()
+plt.grid(True)
 plt.show()
 
 # # -----------------
