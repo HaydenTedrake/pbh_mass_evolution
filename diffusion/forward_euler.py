@@ -41,9 +41,9 @@ def update(u, t):
             for k in range(1, Nphi - 1):
                 laplacian = (u[i+1, j, k] - 2*u[i, j, k] + u[i-1, j, k]) / dr**2 \
                     + 2/r * (u[i+1, j, k] - u[i-1, j, k]) / dr \
-                    + 1/(r**2*sin_theta) * (cos_theta * (u[i+1, j, k] - u[i-1, j, k])/ dtheta \
-                    + sin_theta * (u[i+1, j, k] - 2*u[i, j, k] + u[i-1, j, k])/ dtheta**2) \
-                    + 1/((r*sin_theta)**2) * (u[i+1, j, k] - 2*u[i, j, k] + u[i-1, j, k])/ dphi**2
+                    + 1/(r**2*sin_theta) * (cos_theta * (u[i, j+1, k] - u[i, j-1, k])/ dtheta \
+                    + sin_theta * (u[i, j+1, k] - 2*u[i, j, k] + u[i, j-1, k])/ dtheta**2) \
+                    + 1/((r*sin_theta)**2) * (u[i, j, k+1] - 2*u[i, j, k] + u[i, j, k-1])/ dphi**2
 
                 new_u[i, j, k] += dt * D * laplacian
     
