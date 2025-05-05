@@ -3,8 +3,7 @@ import matplotlib.pyplot as plt
 
 # Grid size
 # Nr, Ntheta, Nphi = 11, 11, 11
-# Nr, Ntheta, Nphi = 21, 21, 21
-Nr, Ntheta, Nphi = 31, 31, 31
+Nr, Ntheta, Nphi = 21, 21, 21
 
 # Grid spacing
 dr = 10 / (Nr - 1)
