@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Grid size
-# Nr, Ntheta, Nphi = 11, 11, 11
 Nr, Ntheta, Nphi = 21, 21, 21
 
 # Grid spacing
@@ -21,14 +20,13 @@ phi_vals = np.linspace(0, 2 * np.pi, Nphi)
 
 # Source as a function of time
 def source_func(t):
+    grid = np.zeros((Nr, Ntheta, Nphi))
     if t==0:
-        return 1.0
-    return 0.0
+        grid[Nr//2, Ntheta//2, Nphi//2] = 1.0
+    return grid
 
 # Initialize u with zeros and one at the source
-u = np.zeros((Nr, Ntheta, Nphi))
-src_i, src_j, src_k = Nr//2, Ntheta//2, Nphi//2  # Center the source
-u[src_i, src_j, src_k] = source_func(0)
+u = source_func(0)
 
 # Time stepping function
 def update(u, t):
@@ -48,7 +46,7 @@ def update(u, t):
 
                 new_u[i, j, k] += dt * D * laplacian
     
-    new_u[src_i, src_j, src_k] += dt * source_func(t)
+    new_u += dt * source_func(t)
     return new_u
 
 # Run simulation for a few steps
