@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Grid size
-Nr, Ntheta, Nphi = 11, 11, 11
+# Nr, Ntheta, Nphi = 11, 11, 11
 # Nr, Ntheta, Nphi = 21, 21, 21
-# Nr, Ntheta, Nphi = 31, 31, 31
+Nr, Ntheta, Nphi = 31, 31, 31
 
 # Grid spacing
 dr = 10 / (Nr - 1)
@@ -12,7 +12,7 @@ dtheta = np.pi / (Ntheta - 1)
 dphi = 2 * np.pi / (Nphi - 1)
 
 # Time step
-dt = 0.01
+dt = 1e-4
 D = 1.0  # diffusion coefficient
 
 # Coordinate arrays
