@@ -55,8 +55,15 @@ steps = 50
 for n in range(1, steps+1):
     u = update(u, t=n*dt)
 
-# Visualize a slice
-plt.imshow(u[:, :, Nphi//2], cmap='viridis')
-plt.title("Slice at phi = π")
+theta_idx = Ntheta//2  # This is at theta = pi/2 (equatorial plane)
+r_grid, phi_grid = np.meshgrid(r_vals, phi_vals, indexing='ij')
+x = r_grid * np.cos(phi_grid)
+y = r_grid * np.sin(phi_grid)
+
+plt.pcolormesh(x, y, u[:, theta_idx, :], cmap='viridis', shading='auto')
+plt.axis('equal')
 plt.colorbar(label='u')
+plt.title("Equatorial slice (θ = π/2)")
+plt.xlabel('x')
+plt.ylabel('y')
 plt.show()
