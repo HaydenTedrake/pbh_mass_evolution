@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 
 # Grid size
 Nr, Ntheta, Nphi = 11, 11, 11
+# Nr, Ntheta, Nphi = 21, 21, 21
+# Nr, Ntheta, Nphi = 31, 31, 31
 
 # Grid spacing
 dr = 10 / (Nr - 1)
@@ -26,7 +28,7 @@ def source_func(t):
 
 # Initialize u with zeros and one at the source
 u = np.zeros((Nr, Ntheta, Nphi))
-src_i, src_j, src_k = 5, 5, 5
+src_i, src_j, src_k = Nr//2, Ntheta//2, Nphi//2  # Center the source
 u[src_i, src_j, src_k] = source_func(0)
 
 # Time stepping function
@@ -56,11 +58,12 @@ for n in range(1, steps+1):
     u = update(u, t=n*dt)
 
 theta_idx = Ntheta//2  # This is at theta = pi/2 (equatorial plane)
+
 r_grid, phi_grid = np.meshgrid(r_vals, phi_vals, indexing='ij')
 x = r_grid * np.cos(phi_grid)
 y = r_grid * np.sin(phi_grid)
 
-plt.pcolormesh(x, y, u[:, theta_idx, :], cmap='viridis', shading='auto')
+plt.contourf(x, y, u[:, theta_idx, :])
 plt.axis('equal')
 plt.colorbar(label='u')
 plt.title("Equatorial slice (θ = π/2)")
