@@ -21,12 +21,11 @@ phi_vals = np.linspace(0, 2 * np.pi, Nphi)
 # Source as a function of time
 def source_func(t):
     grid = np.zeros((Nr, Ntheta, Nphi))
-    if t==0:
-        grid[Nr//2, Ntheta//2, Nphi//2] = 1.0
+    grid[r, theta, phi] = 1/dt
     return grid
 
 # Initialize u with zeros and one at the source
-u = source_func(0)
+u = source_func(0, 0, 0, 0)
 
 # Time stepping function
 def update(u, t):
@@ -50,7 +49,7 @@ def update(u, t):
     return new_u
 
 # Run simulation for a few steps
-steps = 50
+steps = 500
 for n in range(1, steps+1):
     u = update(u, t=n*dt)
 
