@@ -31,10 +31,11 @@ combos = [(2011, -51.6), (2011, 51.6), (2022, -51.6), (2022, 51.6)]
 for year, lat in combos:
     subset = df[(df['Year'] == year) & (df['Lat'] == lat)]
     plt.figure()
-    plt.plot(subset['Lon'], subset['Vertical'], marker='o', label='Effective Vertical Cutoff')
-    plt.title(f'Effective Vertical Cutoff vs Longitude\nYear: {year}, Latitude: {lat}°')
+    plt.ylim(0, 7)  # sets y-axis limits
+    plt.plot(subset['Lon'], subset['Stoermer'], marker='o', label='Stoermer Cutoff')
+    plt.title(f'Stoermer Cutoff vs Longitude\nYear: {year}, Latitude: {lat}°')
     plt.xlabel('Longitude (°)')
-    plt.ylabel('Effective Vertical Cutoff Rigidity (GV)')
+    plt.ylabel('Stoermer Cutoff (GV)')
     plt.grid(True)
     plt.tight_layout()
     plt.legend()
