@@ -10,8 +10,8 @@ from tqdm import tqdm
 energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187,
                  794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]
 
-number = 10
-bin_files = [f"plots/bin(1)/bigSolution{number}-{i}.bin" for i in [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16]]
+number = 21
+bin_files = [f"plots/bin(2)/bigSolution{number}-{i}.bin" for i in [22, 24, 26, 28, 30, 32, 34, 36]]
 
 t_values = np.arange(-10000, 10001, 2)
 x_values = np.arange(-10, 11, 2)

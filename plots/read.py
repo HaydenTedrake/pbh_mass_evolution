@@ -1,13 +1,13 @@
 import numpy as np
 
 # Read the binary file as an array of 64-bit floats
-file_path = "new_project/bin_files/bigSolution4-1.bin"  # Replace with your actual file path
+file_path = "plots/bin(2)/bigSolution21-22.bin"
 data = np.fromfile(file_path, dtype=np.float64)
 
 # Print the first 100 values
 print(data[:100])
 
-t_values = np.arange(-10000, 10001, 10)
+t_values = np.arange(-10000, 10001, 2)
 x_values = np.arange(-10, 11, 2)
 y_values = np.arange(-10, 11, 2)
 z_values = np.arange(-10, 11, 2)
