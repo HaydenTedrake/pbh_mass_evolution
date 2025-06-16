@@ -1,67 +1,78 @@
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-from tqdm import tqdm
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
-import matplotlib.animation as animation
+from tqdm import tqdm
 
-# --------------------------------------------
-# BUILDING THE INTERPOLATORS / DENSITY VS TIME
-# --------------------------------------------
+# ------------------------------
+# LOAD BIN FILES AND INTERPOLATE
+# ------------------------------
 
-# List of energy levels and corresponding .bin files
-energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]  # Example energy levels in GeV
-bin_files = ["plots/bin/bigSolution3-1.bin", "plots/bin/bigSolution3-2.bin", "plots/bin/bigSolution3-3.bin", "plots/bin/bigSolution3-4.bin", "plots/bin/bigSolution3-5.bin", "plots/bin/bigSolution3-6.bin", "plots/bin/bigSolution3-7.bin", "plots/bin/bigSolution3-8.bin", "plots/bin/bigSolution3-10.bin", "plots/bin/bigSolution3-11.bin", "plots/bin/bigSolution3-12.bin", "plots/bin/bigSolution3-13.bin", "plots/bin/bigSolution3-14.bin", "plots/bin/bigSolution3-15.bin", "plots/bin/bigSolution3-16.bin"]
+# energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]
+energy_levels = [130, 200, 320, 500, 790, 1300, 2000, 3200]
+                 
 
-# Dictionary to store interpolators for each energy
+number = 21
+bin_files = [f"plots/bin(2)/bigSolution{number}-{i}.bin" for i in [22, 24, 26, 28, 30, 32, 34, 36]]
+
+t_values = np.arange(-10000, 10001, 2)
+x_values = np.arange(-10, 11, 2)
+y_values = np.arange(-10, 11, 2)
+z_values = np.arange(-10, 11, 2)
+
 interpolators = {}
 
-# Define the grid
-t_values = np.arange(-10000, 10001, 2)  # t from -10,000 to 10,000 in steps of 2
-x_values = np.arange(-10, 11, 2)         # x from -10 to 10 in steps of 2
-y_values = np.arange(-10, 11, 2)         # y from -10 to 10 in steps of 2
-z_values = np.arange(-10, 11, 2)         # z from -10 to 10 in steps of 2
-
-# Prepare a figure
-# plt.figure(figsize=(10, 6))
-
-# Iterate over energy levels and construct interpolators with a progress bar
 for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), desc="Building Interpolators"):
-    # Read data from .bin file
     data = np.fromfile(file, dtype=np.float64)
-    
-    # Validate data length
     expected_length = len(t_values) * len(x_values) * len(y_values) * len(z_values)
     if len(data) != expected_length:
-        raise ValueError(f"Mismatch for {file}: Expected {expected_length} values, got {len(data)}")
-
-    # Reshape data to match the grid dimensions
+        raise ValueError(f"File {file}: Expected {expected_length}, got {len(data)}")
     data = data.reshape(len(t_values), len(x_values), len(y_values), len(z_values))
-    # plt.plot(t_values, data[:, 5, 5, 6], label=f"E = {E:.3g} GeV")
+    interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data, bounds_error=False)
 
-    # Create and store 4D interpolator
-    interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data, method='linear', bounds_error=False, fill_value=None)
+# ----------------------------
+# PANEL 1: No. Density vs Time
+# ----------------------------
 
-# plt.show()
-# exit()
+fig1, ax1 = plt.subplots(figsize=(6, 4))
 
-fig, ax = plt.subplots(figsize=(12, 8))
-
-# Evaluate and plot for each energy
 for E in energy_levels:
-    # Interpolate values at (t, x, y, z)
-    values = interpolators[E]([[t, 0, 0, 0.01] for t in t_values])
+    values = interpolators[E]([[t, 0, 0, 0] for t in t_values])
+    ax1.plot(t_values, values, label=f"{E:.3g}")
 
-    # Plot
-    ax.plot(t_values, values, label=f"E = {E:.3g} GeV")
+ax1.set_yscale("log")
+ax1.set_xlabel("Time (days)", fontsize=14)
+ax1.set_ylabel(r"$u(0, 0, 0)\ (\mathrm{hA}\ U^3)$", fontsize=14)
+ax1.set_ylim([0, 300000])
+ax1.set_title(f"bigSolution{number}", fontsize=16)
 
-ax.set_title("Density vs. Time for each Energy (x=0, y=0, z=0.01)", fontsize=26)
-ax.set_xlabel("Time", fontsize=24)
-ax.set_ylabel("Density", fontsize=24)
+# Match color-coded legend style
+ax1.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.01, 0.5), title="")
+plt.tight_layout()
+plt.show()
 
-ax.tick_params(axis='both', which='major', labelsize=18)
-ax.grid(True)
-ax.legend(fontsize=20, loc = "upper left", bbox_to_anchor=(1.05, 1), borderaxespad=0.5)
-ax.yaxis.get_offset_text().set_fontsize(18)
+# --------------------------
+# PANEL 2: Density vs Energy
+# --------------------------
+
+fig2, ax2 = plt.subplots(figsize=(6, 4))
+t_plot = [1000, 2000, 4000, 8000]
+
+for t in t_plot:
+    spectrum = []
+    for E in energy_levels:
+        val = interpolators[E]((t, 0, 1, 0.01))
+        if val is None or val < 1e0:
+            val = 1e0
+        spectrum.append(val)
+
+    # Skip the first N energies to avoid the rising slope
+    ax2.plot(energy_levels[1:], spectrum[1:], label=f"{t} days")
+
+ax2.set_xscale("log")
+ax2.set_yscale("log")
+ax2.set_xlabel("Energy (GeV)", fontsize=14)
+ax2.set_ylabel(r"No. density ($\mathrm{m^{-3}\,GeV^{-1}}$)", fontsize=14)
+ax2.set_title("No. Density vs Energy", fontsize=16)
+ax2.legend(fontsize=10)
 plt.tight_layout()
 plt.show()
