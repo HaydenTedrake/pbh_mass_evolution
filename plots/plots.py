@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from itertools import product
 
 # ------------------------------
 # LOAD BIN FILES AND INTERPOLATE
@@ -29,9 +30,9 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
     data = data.reshape(len(t_values), len(x_values), len(y_values), len(z_values))
     interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data, bounds_error=False)
 
-# ----------------------------
-# PANEL 1: No. Density vs Time
-# ----------------------------
+# -------------------
+# No. Density vs Time
+# -------------------
 
 fig1, ax1 = plt.subplots(figsize=(6, 4))
 
@@ -41,7 +42,40 @@ for E in energy_levels:
 
 ax1.set_xlabel("Time (days)", fontsize=14)
 ax1.set_xlim([-6000, -4000])
-ax1.set_ylabel(r"$u(0, 0, 0)\ (\mathrm{hA}\ U^3)$", fontsize=14)
+ax1.set_ylabel("u(0,0,0)", fontsize=14)
+ax1.set_ylim([0, 300000])
+ax1.set_title(f"bigSolution{number}", fontsize=16)
+
+# Match color-coded legend style
+ax1.legend(fontsize=7, loc="center left", bbox_to_anchor=(1.01, 0.5), title="")
+plt.tight_layout()
+plt.show()
+
+# --------------------
+# Peak Density vs Time
+# --------------------
+
+E = 130
+interpolator = interpolators[E]
+
+# Prepare list of all (x, y, z) combinations
+spatial_points = list(product(x_values, y_values, z_values))  # all 3D grid points
+
+# Now loop over time values and compute peak density at each t
+peak_densities = []
+
+for t in tqdm(t_values, desc=f"Evaluating peak density for E = {E} GeV"):
+    points = [[t, x, y, z] for (x, y, z) in spatial_points]
+    values = interpolator(points)
+    peak_densities.append(np.nanmax(values))  # nanmax in case of out-of-bound issues
+
+peak_densities = np.array(peak_densities)
+
+fig1, ax1 = plt.subplots(figsize=(6, 4))
+
+ax1.plot(t_values, peak_densities, label=f"{E} GeV")
+ax1.set_xlabel("Time (days)", fontsize=14)
+ax1.set_ylabel("Peak Density", fontsize=14)
 ax1.set_ylim([0, 300000])
 ax1.set_title(f"bigSolution{number}", fontsize=16)
 
