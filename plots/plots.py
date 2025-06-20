@@ -9,8 +9,7 @@ from itertools import product
 # ------------------------------
 
 # energy_levels = [100, 125.893, 158.489, 199.526, 251.189, 316.228, 398.107, 501.187, 794.328, 1000, 1258.93, 1584.89, 1995.26, 2511.89, 3162.28]
-energy_levels = [130, 200, 320, 500, 790, 1300, 2000, 3200]
-                 
+energy_levels = [130, 200, 320, 500, 790, 1300, 2000, 3200]     
 
 number = 21
 bin_files = [f"plots/bin(2)/bigSolution{number}-{i}.bin" for i in [22, 24, 26, 28, 30, 32, 34, 36]]
@@ -24,7 +23,7 @@ interpolators = {}
 
 for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), desc="Building Interpolators"):
     data = np.fromfile(file, dtype=np.float64)
-    expected_length = len(t_values) * len(x_values) * len(y_values) * len(z_values)
+    expected_length = len(x_values) * len(y_values) * len(z_values) * len(t_values)
     if len(data) != expected_length:
         raise ValueError(f"File {file}: Expected {expected_length}, got {len(data)}")
     data = data.reshape(len(t_values), len(x_values), len(y_values), len(z_values))

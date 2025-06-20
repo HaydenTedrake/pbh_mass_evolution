@@ -1,3 +1,5 @@
 venv/
 .DS_Store
 plots/bin(2)/
+plots/AMSPositronDataWithErrors.m
+plots/Text/
