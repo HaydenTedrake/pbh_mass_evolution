@@ -30,8 +30,8 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
 # Response Function Setup
 # -----------------------
 
-n = 1000
-time_range = np.arange(-500, 501, 1)  # length = n + 1
+n = 2000
+time_range = np.arange(-6000, -3999, 1)
 
 decay = (400 / 20000) * n
 
@@ -55,6 +55,7 @@ a_data = interpolators[selected_energy]([[t, 0, 0, 0] for t in t_values])
 interp_a = interp1d(t_values, a_data, bounds_error=False, fill_value=0)
 a = interp_a(time_range)
 a = a / np.max(a)  # normalize
+peak_index = np.argmax(a)
 
 # Compute response
 g = M @ a
@@ -111,18 +112,23 @@ plt.show()
 # Plot 4: Slice Comparison
 # ------------------------
 
-slice_index = 250
 plt.figure()
 
-# Normalize M slice
-m_slice = M[:, slice_index]
-m_slice = m_slice / np.linalg.norm(m_slice)
-plt.plot(m_slice, label=f"M_input({slice_index})")
+# Input M slice
+for s in [peak_index - 10, peak_index, peak_index + 10]:
+    m_input_slice = M[:, s]
+    m_input_slice = m_input_slice / np.linalg.norm(m_input_slice)
+    plt.plot(m_input_slice, label=f"M_input({s})")
 
 # Compare with extracted slices
-for s in [230, 240, 250]:
-    m_ext_slice = M_ext[:, s] / np.linalg.norm(M_ext[:, s])
-    plt.plot(m_ext_slice, label=f"M_extracted({s})")
+for s in [peak_index - 10, peak_index, peak_index + 10]:
+    col = M_ext[:, s]
+    norm = np.linalg.norm(col)
+    if norm > 1e-10:
+        m_ext_slice = col / norm
+        plt.plot(m_ext_slice, label=f"M_extracted({s})")
+    else:
+        print(f"Skipped M_ext column {s}: norm too small ({norm})")
 
 plt.legend()
 plt.xlabel("i")
