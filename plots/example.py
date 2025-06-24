@@ -26,15 +26,14 @@ for E, file in tqdm(zip(energy_levels, bin_files), total=len(energy_levels), des
     data = data.reshape(len(t_values), len(x_values), len(y_values), len(z_values))
     interpolators[E] = RegularGridInterpolator((t_values, x_values, y_values, z_values), data, bounds_error=False)
 
-# ------------------------
+# -----------------------
 # Response Function Setup
-# ------------------------
+# -----------------------
 
 n = 1000
 time_range = np.arange(-500, 501, 1)  # length = n + 1
 
-# Response kernel parameters
-decay = (400 / 20000) * n  # scaled decay constant
+decay = (400 / 20000) * n
 
 def M_func(t, t_prime):
     delta = t - t_prime
@@ -43,15 +42,13 @@ def M_func(t, t_prime):
     return (delta ** 2 * np.exp(-delta / decay)) / (2 * decay ** 3)
 
 # Build M matrix
-print("Building response matrix M...")
 M = np.array([[M_func(ti, tj) for tj in time_range] for ti in time_range])
 
-# ------------------------
+# --------------------------------
 # Use File-Based Gaussian as Input
-# ------------------------
+# --------------------------------
 
 selected_energy = 500
-print(f"Using interpolated Gaussian at E = {selected_energy} GeV")
 
 # Get u(t, 0, 0, 0)
 a_data = interpolators[selected_energy]([[t, 0, 0, 0] for t in t_values])
@@ -62,9 +59,9 @@ a = a / np.max(a)  # normalize
 # Compute response
 g = M @ a
 
-# ------------------------
+# --------------------
 # Plot 1: Contour of M
-# ------------------------
+# --------------------
 
 plt.figure()
 plt.contourf(M, levels=100)
@@ -75,13 +72,13 @@ plt.ylabel("i")
 plt.tight_layout()
 plt.show()
 
-# ------------------------
+# --------------------------
 # Plot 2: Input and Response
-# ------------------------
+# --------------------------
 
 plt.figure()
-plt.plot(time_range, a, label="a(t) from file (normalized)")
-plt.plot(time_range, g, label="g(t) = M @ a(t)")
+plt.plot(time_range, a, label="a(t) (input)")
+plt.plot(time_range, g, label="g(t) (response)")
 plt.xlabel("Time (days)")
 plt.ylabel("Amplitude")
 plt.legend()
@@ -90,21 +87,21 @@ plt.title(f"Input and Response at E = {selected_energy} GeV")
 plt.tight_layout()
 plt.show()
 
-# ------------------------
+# ----------------------------
 # Extracted M: g a^T / (a^T a)
-# ------------------------
+# ----------------------------
 
 norm = a.T @ a
 M_ext = np.outer(g, a) / norm
 
-# ------------------------
+# ------------------------------
 # Plot 3: Contour of Extracted M
-# ------------------------
+# ------------------------------
 
 plt.figure()
 plt.contourf(M_ext, levels=100)
 plt.colorbar()
-plt.title("Extracted M = (g aᵀ) / (aᵀ a)")
+plt.title("Extracted M")
 plt.xlabel("j")
 plt.ylabel("i")
 plt.tight_layout()
@@ -114,7 +111,7 @@ plt.show()
 # Plot 4: Slice Comparison
 # ------------------------
 
-slice_index = 250  # center-ish slice
+slice_index = 250
 plt.figure()
 
 # Normalize M slice
