@@ -1,7 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d, RegularGridInterpolator
+from scipy.linalg import toeplitz 
 from tqdm import tqdm
+
+def extract_toeplitz_first_col(g, a):
+    n = len(a)
+    k = n
+
+    # Build a matrix whose columns are shifted versions of a
+    A = np.column_stack([np.roll(a, i) for i in range(k)])
+    for i in range(k):
+        A[:i, i] = 0  # only zero upper part of column i
+
+
+    # Solve least squares: A @ c ≈ g
+    c, residuals, rank, s = np.linalg.lstsq(A, g, rcond=None)
+
+    # # Print debug info
+    # print("A.shape =", A.shape)
+    # print("First few rows of A:\n", A[:5])
+    # print("g[:5] =", g[:5])
+    # print("Extracted c[:10] =", c[:10])
+    # print("||A @ c - g|| =", np.linalg.norm(A @ c - g))
+
+    # Pad to full size if needed
+    if k < n:
+        c = np.pad(c, (0, n - k), constant_values=0)
+
+    return c
 
 # ------------------------
 # Load Gaussian Data Files
@@ -60,6 +87,7 @@ peak_index = np.argmax(a)
 # Compute response
 g = M @ a
 
+
 # --------------------
 # Plot 1: Contour of M
 # --------------------
@@ -88,12 +116,14 @@ plt.title(f"Input and Response at E = {selected_energy} GeV")
 plt.tight_layout()
 plt.show()
 
-# ----------------------------
-# Extracted M: g a^T / (a^T a)
-# ----------------------------
+# --------------------------------
+# Extracted Toeplitz approximation
+# --------------------------------
 
-norm = a.T @ a
-M_ext = np.outer(g, a) / norm
+toeplitz_col = extract_toeplitz_first_col(g, a)
+M_ext = toeplitz(toeplitz_col)
+print("M_ext[:5, :5] =\n", M_ext[:5, :5])
+print("M_ext norm =", np.linalg.norm(M_ext))
 
 # ------------------------------
 # Plot 3: Contour of Extracted M
@@ -117,13 +147,15 @@ plt.figure()
 # Input M slice
 for s in [peak_index - 10, peak_index, peak_index + 10]:
     m_input_slice = M[:, s]
-    m_input_slice = m_input_slice / np.linalg.norm(m_input_slice)
+    norm = np.linalg.norm(m_input_slice)
+    m_input_slice = m_input_slice / norm
     plt.plot(m_input_slice, label=f"M_input({s})")
 
 # Compare with extracted slices
 for s in [peak_index - 10, peak_index, peak_index + 10]:
     col = M_ext[:, s]
     norm = np.linalg.norm(col)
+    print(f"a[{s}] = {a[s]}, norm = {norm}")
     if norm > 1e-10:
         m_ext_slice = col / norm
         plt.plot(m_ext_slice, label=f"M_extracted({s})")
