@@ -4,27 +4,21 @@ from scipy.interpolate import interp1d, RegularGridInterpolator
 from scipy.linalg import toeplitz 
 from tqdm import tqdm
 
+# ------
+# Solver
+# ------
+
 def extract_toeplitz_first_col(g, a):
     n = len(a)
     k = n
 
-    # Build a matrix whose columns are shifted versions of a
+    # columns are shifted versions of a
     A = np.column_stack([np.roll(a, i) for i in range(k)])
     for i in range(k):
-        A[:i, i] = 0  # only zero upper part of column i
+        A[:i, i] = 0
 
-
-    # Solve least squares: A @ c ≈ g
     c, residuals, rank, s = np.linalg.lstsq(A, g, rcond=None)
 
-    # # Print debug info
-    # print("A.shape =", A.shape)
-    # print("First few rows of A:\n", A[:5])
-    # print("g[:5] =", g[:5])
-    # print("Extracted c[:10] =", c[:10])
-    # print("||A @ c - g|| =", np.linalg.norm(A @ c - g))
-
-    # Pad to full size if needed
     if k < n:
         c = np.pad(c, (0, n - k), constant_values=0)
 
