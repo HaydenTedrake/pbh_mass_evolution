@@ -1,10 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpmath import mp, mpf
-from scipy.linalg import toeplitz
 from scipy.optimize import minimize
-
-mp.dps = 50
 
 # Parameters
 n = 1000
