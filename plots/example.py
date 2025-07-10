@@ -1,32 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d, RegularGridInterpolator
-from scipy.linalg import toeplitz 
-from tqdm import tqdm
-import pandas as pd
-from mpmath import mp, mpf
-
-mp.dps = 50
+from scipy.optimize import minimize
 
 # ------
 # Solver
 # ------
 
-def extract_toeplitz_first_col(g, a):
+def solve_toeplitz(g, a, bandwidth=50):
     n = len(a)
-    k = n
-
-    # columns are shifted versions of a
-    A = np.column_stack([np.roll(a, i) for i in range(k)])
-    for i in range(k):
-        A[:i, i] = 0
-
-    c, residuals, rank, s = np.linalg.lstsq(A, g, rcond=None)
-
-    if k < n:
-        c = np.pad(c, (0, n - k), constant_values=0)
-
-    return c
+    
+    # Parameterization: Only store non-zero band elements
+    def vec_to_M(v):
+        M = np.zeros((n,n))
+        for i in range(n):
+            for j in range(max(0,i-bandwidth), i+1):
+                M[i,j] = v[i-j]
+        return M
+    
+    # Optimization objective
+    def loss(v):
+        return np.linalg.norm(vec_to_M(v) @ a - g)**2 + 1e-8*np.linalg.norm(v)**2
+    
+    # Solve
+    v0 = np.zeros(bandwidth+1)
+    res = minimize(loss, v0, method='L-BFGS-B')
+    
+    return vec_to_M(res.x)
 
 # -----------------------
 # Response Function Setup
@@ -92,8 +91,8 @@ plt.show()
 # Extracted Toeplitz approximation
 # --------------------------------
 
-toeplitz_col = extract_toeplitz_first_col(g, a)
-M_ext = toeplitz(toeplitz_col)
+a_max = np.max(np.abs(a))
+M_ext = solve_toeplitz(g/(a_max+1e-300), a/(a_max+1e-300))
 
 # ------------------------------
 # Plot 3: Contour of Extracted M
