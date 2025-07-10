@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpmath import mp, mpf
 from scipy.linalg import toeplitz
+from scipy.optimize import minimize
+
+mp.dps = 50
 
 # Parameters
 n = 1000
@@ -12,7 +16,7 @@ sigma = (200 / 20000) * n
 # Define M and a analytically
 def M_func(t, t_prime):
     delta = t - t_prime
-    if delta < 0 or delta > 50:
+    if delta < 0 or delta > 50:  # Strictly lower-triangular
         return 0
     return (delta ** 2 * np.exp(-delta / dk)) / (2 * dk ** 3)
 
@@ -45,26 +49,30 @@ plt.legend()
 plt.title("Input and Response")
 plt.show()
 
-def extract_toeplitz_first_col(g, a):
+def solve_toeplitz(g, a, bandwidth=50):
     n = len(a)
-    k = n
-
-    # columns are shifted versions of a
-    A = np.column_stack([np.roll(a, i) for i in range(k)])
-    for i in range(k):
-        A[:i, i] = 0
-
-    c, residuals, rank, s = np.linalg.lstsq(A, g, rcond=None)
-
-    if k < n:
-        c = np.pad(c, (0, n - k), constant_values=0)
-
-    return c
-
-toeplitz_col = extract_toeplitz_first_col(g, a)
+    
+    # Parameterization: Only store non-zero band elements
+    def vec_to_M(v):
+        M = np.zeros((n,n))
+        for i in range(n):
+            for j in range(max(0,i-bandwidth), i+1):
+                M[i,j] = v[i-j]
+        return M
+    
+    # Optimization objective
+    def loss(v):
+        return np.linalg.norm(vec_to_M(v) @ a - g)**2 + 1e-8*np.linalg.norm(v)**2
+    
+    # Solve
+    v0 = np.zeros(bandwidth+1)
+    res = minimize(loss, v0, method='L-BFGS-B')
+    
+    return vec_to_M(res.x)
 
 # Compare extracted M vs true M
-M_ext = toeplitz(toeplitz_col)
+a_max = np.max(np.abs(a))
+M_ext = solve_toeplitz(g/(a_max+1e-300), a/(a_max+1e-300))
 
 plt.figure()
 plt.contourf(M_ext, levels=100)
@@ -74,4 +82,30 @@ plt.xlabel("j")
 plt.ylabel("i")
 plt.show()
 
-print("Norm difference between true M and extracted M:", np.linalg.norm(M - M_ext))
+peak_index = np.argmax(a)
+plt.figure()
+
+# Input M slice
+for s in [peak_index - 10, peak_index, peak_index + 10]:
+    m_input_slice = M[:, s]
+    norm = np.linalg.norm(m_input_slice)
+    m_input_slice = m_input_slice / norm
+    plt.plot(m_input_slice, label=f"M_input({s})")
+
+# Compare with extracted slices
+for s in [peak_index - 10, peak_index, peak_index + 10]:
+    col = M_ext[:, s]
+    norm = np.linalg.norm(col)
+    if norm > 1e-10 and np.all(np.isfinite(col)):
+        m_ext_slice = col / norm
+        plt.plot(m_ext_slice, label=f"M_extracted({s})")
+    else:
+        print(f"Skipped M_ext column {s}: invalid data (norm={norm})")
+
+plt.legend()
+plt.xlabel("i")
+plt.ylabel("M / |M|")
+plt.grid(True)
+plt.title("Comparison of M Slices")
+plt.tight_layout()
+plt.show()

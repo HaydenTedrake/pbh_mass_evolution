@@ -4,6 +4,9 @@ from scipy.interpolate import interp1d, RegularGridInterpolator
 from scipy.linalg import toeplitz 
 from tqdm import tqdm
 import pandas as pd
+from mpmath import mp, mpf
+
+mp.dps = 50
 
 # ------
 # Solver
@@ -50,7 +53,6 @@ M = np.array([[M_func(ti, tj) for tj in time_range] for ti in time_range])
 sigma = 200
 mu = -5000
 norm_factor = np.sqrt(2 * np.pi * sigma**2)
-
 a = 1000 * np.exp(-((time_range - mu)**2) / (2 * sigma**2)) / norm_factor
 peak_index = np.argmax(a)
 
