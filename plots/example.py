@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+import pandas as pd
 
 # ------
 # Solver
@@ -57,7 +58,6 @@ peak_index = np.argmax(a)
 
 # Compute response
 g = M @ a
-
 
 # --------------------
 # Plot 1: Contour of M

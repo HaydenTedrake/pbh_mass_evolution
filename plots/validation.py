@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+import pandas as pd
 
 # Parameters
 n = 1000
@@ -100,8 +101,12 @@ for s in [peak_index - 10, peak_index, peak_index + 10]:
 
 plt.legend()
 plt.xlabel("i")
+plt.xlim(200, 400)
 plt.ylabel("M / |M|")
 plt.grid(True)
 plt.title("Comparison of M Slices")
 plt.tight_layout()
 plt.show()
+
+df_M_ext = pd.DataFrame(M_ext)
+df_M_ext.to_csv("M_ext.csv", index=False)
