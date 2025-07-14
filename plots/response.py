@@ -43,3 +43,6 @@ plt.title("M_ext")
 plt.legend()
 plt.grid(True)
 plt.show()
+
+df_new_M_ext = pd.DataFrame(M_ext)
+df_new_M_ext.to_csv("new_M_ext.csv", index=False)
